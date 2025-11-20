@@ -33,7 +33,7 @@ Complete guide for deploying Proxmox Manager Portal in production environments.
 
 ### Network Requirements
 
-- Ports 8081 (frontend) and 3001 (proxy) available
+- Port 8080 for the application (includes both frontend and proxy server)
 - Network access to Proxmox VE servers
 - Optional: Domain name for SSL/HTTPS
 
@@ -52,45 +52,31 @@ Complete guide for deploying Proxmox Manager Portal in production environments.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/proxmox-manager-portal.git
-cd proxmox-manager-portal
+git clone https://github.com/waive-as/proxmox-manager.git
+cd proxmox-manager
 ```
 
-### 2. Configure Environment
+### 2. Configure Environment (Optional)
 
-Create a `.env` file from the template:
+The application works out of the box with sensible defaults. If you need to customize:
 
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-**Required Environment Variables:**
+**Optional Environment Variables:**
 
 ```env
-# Application
+# Application Port (default: 8080)
+PORT=8080
+
+# Node Environment
 NODE_ENV=production
-VITE_API_URL=http://localhost:3001
 
-# Database (if using backend)
-DB_HOST=postgres
-DB_PORT=5432
-DB_NAME=proxmox_portal
-DB_USER=proxmox_user
-DB_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
-
-# JWT Authentication
-JWT_SECRET=CHANGE_THIS_TO_RANDOM_STRING
-JWT_EXPIRY=24h
-
-# Ports
-FRONTEND_PORT=8081
-PROXY_PORT=3001
-BACKEND_PORT=3002
-
-# Optional: Supabase
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
+# Optional: Supabase (if using cloud backend)
+# VITE_SUPABASE_URL=your-supabase-url
+# VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 ### 3. Start Services
@@ -108,13 +94,11 @@ docker-compose logs -f
 
 ### 4. Access the Application
 
-- **Frontend**: http://your-server:8081
-- **Proxy Server**: http://your-server:3001
-- **Health Check** (if using backend): http://your-server:3002/health
+- **Application**: http://your-server:8080 (includes both frontend and proxy server internally)
 
 ### 5. First-Run Setup
 
-1. Navigate to http://your-server:8081
+1. Navigate to http://your-server:8080
 2. You'll be redirected to the **Setup Wizard**
 3. Create an admin account
 4. Add your first Proxmox server
@@ -149,8 +133,8 @@ docker-compose down -v
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/proxmox-manager-portal.git
-cd proxmox-manager-portal
+git clone https://github.com/waive-as/proxmox-manager.git
+cd proxmox-manager
 
 # Install frontend dependencies
 npm install

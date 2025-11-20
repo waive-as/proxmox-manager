@@ -32,13 +32,13 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 2. **Clone your fork**:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/proxmox-manager-portal.git
-   cd proxmox-manager-portal
+   git clone https://github.com/waive-as/proxmox-manager.git
+   cd proxmox-manager
    ```
 
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/ORIGINAL_OWNER/proxmox-manager-portal.git
+   git remote add upstream https://github.com/waive-as/proxmox-manager.git
    ```
 
 4. **Install dependencies**:
@@ -305,7 +305,7 @@ npm run test:run          # Run all tests
 
 ### Before Submitting a Bug Report
 
-1. Check the [existing issues](https://github.com/OWNER/proxmox-manager-portal/issues)
+1. Check the [existing issues](https://github.com/waive-as/proxmox-manager/issues)
 2. Update to the latest version
 3. Check the documentation
 4. Collect relevant information:
@@ -381,7 +381,7 @@ Screenshots, mockups, or examples.
 
 ## Questions?
 
-- Open a [GitHub Discussion](https://github.com/OWNER/proxmox-manager-portal/discussions)
+- Open a [GitHub Discussion](https://github.com/waive-as/proxmox-manager/discussions)
 - Check existing documentation
 - Ask in pull request comments
 

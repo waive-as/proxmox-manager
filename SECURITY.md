@@ -23,8 +23,8 @@ We take the security of Proxmox Manager Portal seriously. If you believe you hav
 
 **Report security vulnerabilities privately** by:
 
-1. **Email**: Send details to [INSERT SECURITY EMAIL] with the subject line "Security Vulnerability Report"
-2. **GitHub Security Advisory**: Use the [GitHub Security Advisory](https://github.com/OWNER/proxmox-manager-portal/security/advisories/new) feature
+1. **Email**: Send details to peter.skaugvold@waive.no with the subject line "Security Vulnerability Report"
+2. **GitHub Security Advisory**: Use the [GitHub Security Advisory](https://github.com/waive-as/proxmox-manager/security/advisories/new) feature
 
 ### What to Include in Your Report
 
@@ -129,7 +129,7 @@ This project aims to follow security best practices including:
 
 If you have questions about security that don't involve a specific vulnerability, please:
 
-- Open a [GitHub Discussion](https://github.com/OWNER/proxmox-manager-portal/discussions) (for general security questions)
+- Open a [GitHub Discussion](https://github.com/waive-as/proxmox-manager/discussions) (for general security questions)
 - Review our [documentation](docs/)
 - Check existing security-related issues
 
