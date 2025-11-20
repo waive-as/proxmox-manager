@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = env("DATABASE_PROVIDER") // "sqlite" for development, "postgresql" for production
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  username    String    @unique
+  password    String
+  name        String
+  role        String    @default("USER") // ADMIN, READONLY, USER
+  isActive    Boolean   @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  sessions       Session[]
+  proxmoxServers ProxmoxServer[]
+  activityLogs   ActivityLog[]
+  notifications  Notification[]
+  apiKeys        ApiKey[]
+
+  @@map("users")
+}
+
+model ProxmoxServer {
+  id          String   @id @default(uuid())
+  name        String
+  host        String
+  port        Int      @default(8006)
+  username    String
+  tokenId     String
+  tokenSecret String   // Encrypted token secret
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("proxmox_servers")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  action      String   // login, logout, vm_start, vm_stop, user_create, etc.
+  resource    String?  // Resource affected (VM ID, user ID, etc.)
+  details     String?  // JSON string with additional details
+  ipAddress   String?
+  userAgent   String?
+  status      String   @default("success") // success, failure, error
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  name        String    // Friendly name for the key
+  key         String    @unique // Hashed API key
+  permissions String    // JSON array of permissions
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([key])
+  @@map("api_keys")
+}
+
+model Webhook {
+  id          String   @id @default(uuid())
+  name        String
+  url         String
+  events      String   // JSON array of events to trigger on
+  secret      String?  // Secret for signing webhook payloads
+  isActive    Boolean  @default(true)
+  lastTrigger DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("webhooks")
+}

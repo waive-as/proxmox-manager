@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (optional for development, can use SQLite instead)
+  postgres:
+    image: postgres:16-alpine
+    container_name: proxmox-manager-db-dev
+    environment:
+      POSTGRES_DB: proxmox_manager_dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    networks:
+      - proxmox-dev-network
+    profiles:
+      - with-postgres
+
+  # Redis (optional for development)
+  redis:
+    image: redis:7-alpine
+    container_name: proxmox-manager-redis-dev
+    ports:
+      - "6379:6379"
+    networks:
+      - proxmox-dev-network
+    profiles:
+      - with-redis
+
+  # Backend API (development mode with hot reload)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: proxmox-manager-backend-dev
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DATABASE_PROVIDER: sqlite
+      DATABASE_URL: file:./dev.db
+      JWT_SECRET: dev-secret-not-for-production
+      JWT_REFRESH_SECRET: dev-refresh-secret-not-for-production
+      LOG_LEVEL: debug
+      LOG_PRETTY_PRINT: "true"
+      DEBUG: "true"
+    ports:
+      - "3002:3002"
+    networks:
+      - proxmox-dev-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - backend-dev-logs:/app/logs
+    command: npm run dev
+    profiles:
+      - full-stack
+
+  # Frontend (development mode with hot reload)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: proxmox-manager-frontend-dev
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3002
+    ports:
+      - "8081:8081"
+    networks:
+      - proxmox-dev-network
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - /app/node_modules
+    command: npm run dev
+    profiles:
+      - full-stack
+
+volumes:
+  postgres-dev-data:
+    driver: local
+  backend-dev-logs:
+    driver: local
+
+networks:
+  proxmox-dev-network:
+    driver: bridge

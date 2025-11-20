@@ -1,0 +1,58 @@
+name: Deploy Proxmox Manager Portal
+
+# DISABLED: This workflow requires server secrets to be configured
+# To enable: Configure SERVER_HOST, SERVER_USER, SERVER_SSH_KEY, SERVER_PORT in GitHub secrets
+on:
+  # push:
+  #   branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
+  workflow_dispatch:  # Only run manually for now
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd proxy-server && npm ci
+    
+    - name: Run tests
+      run: npm run lint
+    
+    - name: Build application
+      run: npm run build
+
+  # Deploy job disabled until server secrets are configured
+  # deploy:
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
+  #   
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   
+  #   - name: Deploy to server
+  #     uses: appleboy/ssh-action@v1.0.3
+  #     with:
+  #       host: ${{ secrets.SERVER_HOST }}
+  #       username: ${{ secrets.SERVER_USER }}
+  #       key: ${{ secrets.SERVER_SSH_KEY }}
+  #       port: ${{ secrets.SERVER_PORT }}
+  #       script: |
+  #         cd /opt/proxmox-manager-portal
+  #         git pull origin main
+  #         docker-compose -f docker-compose.new.yml down
+  #         docker-compose -f docker-compose.new.yml build --no-cache
+  #         docker-compose -f docker-compose.new.yml up -d
+  #         docker system prune -f

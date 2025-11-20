@@ -1,0 +1,17 @@
+
+version: '3'
+
+services:
+  proxmox-manager:
+    build: .
+    ports:
+      - "8080:8080"  # Web UI
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - proxmox-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  proxmox-data:
+    driver: local

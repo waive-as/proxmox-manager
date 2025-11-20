@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: proxmox-manager-db
+    environment:
+      POSTGRES_DB: proxmox_portal
+      POSTGRES_USER: proxmox_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password_123}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U proxmox_user -d proxmox_portal"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.new
+    container_name: proxmox-manager-backend
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - DATABASE_URL=postgresql://proxmox_user:${DB_PASSWORD:-secure_password_123}@postgres:5432/proxmox_portal
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend
+  frontend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.new
+    container_name: proxmox-manager-frontend
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "8081:8081"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Nginx reverse proxy for production
+  nginx:
+    image: nginx:alpine
+    container_name: proxmox-manager-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  # SSL certificates
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  postgres-data:
+    driver: local
+  backend-data:
+    driver: local

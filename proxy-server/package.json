@@ -1,0 +1,16 @@
+
+{
+  "name": "proxmox-api-proxy",
+  "version": "1.0.0",
+  "description": "Proxy server for Proxmox API requests",
+  "main": "proxmox-proxy.js",
+  "scripts": {
+    "start": "node proxmox-proxy.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  }
+}
