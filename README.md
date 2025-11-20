@@ -87,23 +87,40 @@ Proxmox Manager Portal is an open-source web application that provides a clean, 
 
 #### Option 1: Docker (Recommended)
 
+**Using Pre-built Image (Easiest):**
+
+```bash
+# Pull and run the latest image from GitHub Container Registry
+docker run -d \
+  --name proxmox-manager \
+  -p 8080:8080 \
+  -v proxmox-data:/app/data \
+  --restart unless-stopped \
+  ghcr.io/waive-as/proxmox-manager:latest
+
+# Access at http://localhost:8080
+```
+
+**Or build from source:**
+
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/proxmox-manager-portal.git
-cd proxmox-manager-portal
+git clone https://github.com/waive-as/proxmox-manager.git
+cd proxmox-manager
 
 # Start with Docker Compose
 docker-compose up -d
 
 # Access at http://localhost:8080
+# The application includes both the frontend and proxy server
 ```
 
 #### Option 2: Local Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/proxmox-manager-portal.git
-cd proxmox-manager-portal
+git clone https://github.com/waive-as/proxmox-manager.git
+cd proxmox-manager
 
 # Install dependencies
 npm install
@@ -117,8 +134,7 @@ cd proxy-server && npm start
 ```
 
 Access the application:
-- **Frontend**: http://localhost:8081
-- **Proxy Server**: http://localhost:3001
+- **Application**: http://localhost:8081 (includes both frontend and proxy server)
 
 ### First-Run Setup
 
@@ -129,6 +145,7 @@ Access the application:
 
 ## 📚 Documentation
 
+- **[Docker Guide](docs/DOCKER.md)** - Docker deployment and usage guide
 - **[Installation & Setup](docs/DEPLOYMENT.md)** - Complete deployment guide
 - **[Development Guide](CONTRIBUTING.md)** - Contributing and development workflow
 - **[Architecture Guide](CLAUDE.md)** - Detailed technical documentation
@@ -162,17 +179,17 @@ Access the application:
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  React Frontend │◄──►│  Proxy Server   │◄──►│  Proxmox Server │
-│   (Port 8081)   │    │   (Port 3001)   │    │   (Port 8006)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │
-         │ (Optional)
-         ▼
-┌─────────────────┐
-│  Backend API    │
-│  PostgreSQL     │
-└─────────────────┘
+┌─────────────────────────────────────┐
+│     Proxmox Manager Container       │
+│                                     │
+│  ┌──────────────┐  ┌────────────┐  │
+│  │   Frontend   │  │   Proxy    │  │    ┌─────────────────┐
+│  │ (React SPA)  │◄─┤   Server   │◄─┼───►│  Proxmox Server │
+│  │  Port 8080   │  │ Port 3001  │  │    │   (Port 8006)   │
+│  └──────────────┘  └────────────┘  │    └─────────────────┘
+│                                     │
+└─────────────────────────────────────┘
+         (Single Docker container)
 ```
 
 The application uses a proxy server to handle CORS issues when communicating with Proxmox VE servers. This allows for secure API communication without requiring CORS configuration on your Proxmox servers.
@@ -314,7 +331,7 @@ See [ROADMAP.md](docs/ROADMAP.md) for detailed future plans.
 - [Proxmox VE](https://www.proxmox.com/) - The amazing virtualization platform
 - [Shadcn UI](https://ui.shadcn.com/) - Beautiful component library
 - [TanStack Query](https://tanstack.com/query/) - Powerful data synchronization
-- All our [contributors](https://github.com/OWNER/proxmox-manager-portal/graphs/contributors)
+- All our [contributors](https://github.com/waive-as/proxmox-manager/graphs/contributors)
 
 ## 📄 License
 
@@ -322,8 +339,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 💬 Community & Support
 
-- **Issues**: [GitHub Issues](https://github.com/OWNER/proxmox-manager-portal/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/OWNER/proxmox-manager-portal/discussions)
+- **Issues**: [GitHub Issues](https://github.com/waive-as/proxmox-manager/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/waive-as/proxmox-manager/discussions)
 - **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## ⭐ Star History
@@ -336,6 +353,6 @@ If you find this project useful, please consider giving it a star! ⭐
 
 Made with ❤️ by the Proxmox Manager Portal community
 
-[Report Bug](https://github.com/OWNER/proxmox-manager-portal/issues) • [Request Feature](https://github.com/OWNER/proxmox-manager-portal/issues) • [Documentation](docs/)
+[Report Bug](https://github.com/waive-as/proxmox-manager/issues) • [Request Feature](https://github.com/waive-as/proxmox-manager/issues) • [Documentation](docs/)
 
 </div>

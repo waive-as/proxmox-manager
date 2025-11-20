@@ -1,0 +1,70 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist
+build
+.next
+.cache
+
+# Development
+.env.local
+.env.development
+.env.test
+*.log
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in image)
+*.md
+docs
+CLAUDE.md
+CONTRIBUTING.md
+LICENSE
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Testing
+coverage
+.nyc_output
+test
+tests
+e2e
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Backend (exclude if building frontend only)
+backend/node_modules
+backend/dist
+backend/.env
+
+# Misc
+*.bak
+*.tmp
