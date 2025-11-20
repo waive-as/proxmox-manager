@@ -79,7 +79,10 @@ Proxmox Manager Portal is an open-source web application that provides a clean, 
 
 ### Prerequisites
 
-- **Node.js** 18+ and npm
+- **Node.js** 18.x to 22.x (Node 23+ not yet supported by all dependencies)
+  - Recommended: Node.js 22 LTS
+  - If using `nvm`: run `nvm use` to switch to the correct version
+- **npm** 9+
 - **Proxmox VE** 7.0+ server
 - **Docker** (optional, for containerized deployment)
 
@@ -147,6 +150,7 @@ Access the application:
 
 - **[Docker Guide](docs/DOCKER.md)** - Docker deployment and usage guide
 - **[Installation & Setup](docs/DEPLOYMENT.md)** - Complete deployment guide
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Development Guide](CONTRIBUTING.md)** - Contributing and development workflow
 - **[Architecture Guide](CLAUDE.md)** - Detailed technical documentation
 - **[Security Policy](SECURITY.md)** - Security guidelines and vulnerability reporting

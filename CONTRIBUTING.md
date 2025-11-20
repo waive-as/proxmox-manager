@@ -21,7 +21,10 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- **Node.js 18.x to 22.x** (Node 23+ not yet supported)
+  - Recommended: Node.js 22 LTS
+  - Use `nvm use` to automatically switch to the correct version
+- **npm** 9+
 - Git
 - Docker and Docker Compose (optional, for testing)
 - A Proxmox VE server (for testing)
