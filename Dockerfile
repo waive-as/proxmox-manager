@@ -6,7 +6,9 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+
+# Install ALL dependencies (needed for build)
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -21,7 +23,9 @@ WORKDIR /app/proxy-server
 
 # Copy proxy server package files
 COPY proxy-server/package*.json ./
-RUN npm ci --only=production
+
+# Install production dependencies only
+RUN npm ci --omit=dev
 
 # Copy proxy server source
 COPY proxy-server/ ./
