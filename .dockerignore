@@ -68,3 +68,5 @@ backend/.env
 # Misc
 *.bak
 *.tmp
+
+.env

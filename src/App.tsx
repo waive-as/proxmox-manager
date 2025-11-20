@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
@@ -23,7 +23,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WhiteLabelProvider } from "./context/WhiteLabelContext";
 import { ThemeProvider } from "./hooks/use-theme";
 import { queryClient } from "./lib/queryClient";
-import { storageService } from "./lib/localStorage";
+import { setupService } from "./services/setupService";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -46,14 +46,30 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // Component to redirect to setup if needed
 const SetupCheck = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const needsSetup = storageService.needsSetup();
+  const { data: setupStatus, isLoading } = useQuery({
+    queryKey: ['setup-status'],
+    queryFn: setupService.checkStatus,
+    retry: 1,
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
+
+  const needsSetup = setupStatus?.needsSetup ?? false;
 
   useEffect(() => {
     // If setup is needed and not already on setup page, redirect
-    if (needsSetup && location.pathname !== "/setup") {
+    if (!isLoading && needsSetup && location.pathname !== "/setup") {
       window.location.href = "/setup";
     }
-  }, [needsSetup, location]);
+  }, [needsSetup, location, isLoading]);
+
+  // Show loading while checking setup status
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   // If setup is needed and we're not on the setup page, show loading
   if (needsSetup && location.pathname !== "/setup") {

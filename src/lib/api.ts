@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:3002/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3002/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -69,7 +69,8 @@ api.interceptors.response.use(
 
         try {
           // Try to refresh the access token
-          await axios.post('http://localhost:3002/api/auth/refresh', {}, {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3002/api';
+          await axios.post(`${apiUrl}/auth/refresh`, {}, {
             withCredentials: true
           });
 

@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install dependencies only (for caching)
 COPY package*.json ./
-RUN npm ci --only=production && \
+RUN npm ci --omit=dev && \
     npm cache clean --force
 
 # Stage 2: Build
@@ -21,7 +21,7 @@ COPY prisma ./prisma
 COPY src ./src
 
 # Install dev dependencies for build
-RUN npm install --only=development
+RUN npm install --include=dev
 
 # Generate Prisma client
 RUN npx prisma generate

@@ -8,7 +8,7 @@ import authRoutes from '@/routes/auth.js';
 import userRoutes from '@/routes/users.js';
 import serverRoutes from '@/routes/servers.js';
 import proxmoxRoutes from '@/routes/proxmox.js';
-import { userService } from '@/services/userService.js';
+import setupRoutes from '@/routes/setup.js';
 
 // Load environment variables
 dotenv.config();
@@ -40,6 +40,7 @@ app.get('/health', (_req, res) => {
 });
 
 // API routes
+app.use('/api/setup', setupRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/servers', serverRoutes);
@@ -49,15 +50,13 @@ app.use('/api/proxmox', proxmoxRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Initialize default admin user and start server
+// Start server (admin user created via setup wizard)
 const startServer = async () => {
   try {
-    // Initialize default admin user if no users exist
-    await userService.initializeDefaultAdmin();
-    
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`🔧 Setup endpoint: http://localhost:${PORT}/api/setup/status`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
     });
   } catch (error) {

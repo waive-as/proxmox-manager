@@ -1,10 +1,13 @@
 version: '3.8'
 
+# Proxmox Manager Portal - Development Setup
+# Builds from local source code for development
+
 services:
-  # PostgreSQL Database (optional for development, can use SQLite instead)
+  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: proxmox-manager-db-dev
+    container_name: proxmox-db-dev
     environment:
       POSTGRES_DB: proxmox_manager_dev
       POSTGRES_USER: dev
@@ -15,38 +18,26 @@ services:
       - postgres-dev-data:/var/lib/postgresql/data
     networks:
       - proxmox-dev-network
-    profiles:
-      - with-postgres
 
-  # Redis (optional for development)
-  redis:
-    image: redis:7-alpine
-    container_name: proxmox-manager-redis-dev
-    ports:
-      - "6379:6379"
-    networks:
-      - proxmox-dev-network
-    profiles:
-      - with-redis
-
-  # Backend API (development mode with hot reload)
+  # Backend API (built from local code)
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev
-    container_name: proxmox-manager-backend-dev
+      dockerfile: Dockerfile
+    container_name: proxmox-backend-dev
     environment:
       NODE_ENV: development
       PORT: 3002
-      DATABASE_PROVIDER: sqlite
-      DATABASE_URL: file:./dev.db
+      DATABASE_PROVIDER: postgresql
+      DATABASE_URL: postgresql://dev:dev123@postgres:5432/proxmox_manager_dev?schema=public
       JWT_SECRET: dev-secret-not-for-production
       JWT_REFRESH_SECRET: dev-refresh-secret-not-for-production
+      ALLOWED_ORIGINS: http://localhost:8081
       LOG_LEVEL: debug
-      LOG_PRETTY_PRINT: "true"
-      DEBUG: "true"
     ports:
       - "3002:3002"
+    depends_on:
+      - postgres
     networks:
       - proxmox-dev-network
     volumes:
@@ -54,18 +45,34 @@ services:
       - /app/node_modules
       - backend-dev-logs:/app/logs
     command: npm run dev
-    profiles:
-      - full-stack
 
-  # Frontend (development mode with hot reload)
+  # Proxy Server (built from local code)
+  proxy:
+    build:
+      context: ./proxy-server
+      dockerfile: Dockerfile
+    container_name: proxmox-proxy-dev
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    networks:
+      - proxmox-dev-network
+    volumes:
+      - ./proxy-server:/app
+      - /app/node_modules
+
+  # Frontend (built from local code)
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: proxmox-manager-frontend-dev
+    container_name: proxmox-frontend-dev
     environment:
       NODE_ENV: development
       VITE_API_URL: http://localhost:3002
+      VITE_PROXY_URL: http://localhost:3001
     ports:
       - "8081:8081"
     networks:
@@ -75,14 +82,10 @@ services:
       - ./public:/app/public
       - /app/node_modules
     command: npm run dev
-    profiles:
-      - full-stack
 
 volumes:
   postgres-dev-data:
-    driver: local
   backend-dev-logs:
-    driver: local
 
 networks:
   proxmox-dev-network:

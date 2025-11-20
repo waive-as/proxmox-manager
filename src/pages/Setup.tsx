@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { storageService } from "@/lib/localStorage";
+import { setupService } from "@/services/setupService";
 import { CheckCircle2, XCircle, Shield } from "lucide-react";
 
 interface PasswordRequirements {
@@ -80,12 +80,12 @@ const Setup = () => {
     try {
       setIsSubmitting(true);
 
-      // Initialize system with admin user
-      await storageService.initializeWithAdmin(
-        formData.email,
-        formData.password,
-        formData.name
-      );
+      // Initialize system with admin user via backend API
+      await setupService.initialize({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name
+      });
 
       toast.success("Setup completed successfully!");
 
