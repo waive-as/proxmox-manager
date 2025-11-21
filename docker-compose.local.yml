@@ -1,5 +1,13 @@
-# Proxmox Manager Portal - Local Testing
-# Builds all images from local source code
+# Proxmox Manager Portal - Local Development
+# This compose file builds all images from local source code
+#
+# For Contributors:
+#   Use this file when developing or contributing to the project
+#   Run: docker compose -f docker-compose.local.yml up -d
+#
+# For Users:
+#   Use the default docker-compose.yml which pulls pre-built images
+#   Run: docker compose up -d
 
 services:
   # PostgreSQL Database
