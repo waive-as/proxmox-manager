@@ -54,7 +54,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({
             Change the access level for this user.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label>Access Level</Label>

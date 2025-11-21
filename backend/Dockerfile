@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install dependencies only (for caching)
 COPY package*.json ./
-RUN npm ci --only=production && \
+RUN npm ci --omit=dev && \
     npm cache clean --force
 
 # Stage 2: Build
@@ -21,7 +21,10 @@ COPY prisma ./prisma
 COPY src ./src
 
 # Install dev dependencies for build
-RUN npm install --only=development
+RUN npm install --include=dev
+
+# Install tsc-alias for path resolution
+RUN npm install --save-dev tsc-alias
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -33,8 +36,8 @@ RUN npm run build
 FROM node:20-alpine AS production
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init for proper signal handling and OpenSSL for Prisma
+RUN apk add --no-cache dumb-init openssl
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -45,6 +48,7 @@ COPY --from=dependencies --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=build --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=build --chown=nodejs:nodejs /app/prisma ./prisma
 COPY --chown=nodejs:nodejs package*.json ./
+COPY --chown=nodejs:nodejs scripts ./scripts
 
 # Generate Prisma client for production
 RUN npx prisma generate
@@ -66,4 +70,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/server.js"]

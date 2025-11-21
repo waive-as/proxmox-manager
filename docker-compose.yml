@@ -1,26 +1,99 @@
 version: '3.8'
 
+# Proxmox Manager Portal - Production Setup
+# Single file to run everything: PostgreSQL + Backend + Frontend + Proxy
+
 services:
-  # Frontend + Proxy Server (All-in-one for simplicity)
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: proxmox-manager
-    ports:
-      - "${PORT:-8080}:8080"
-    environment:
-      - NODE_ENV=production
-    volumes:
-      - app-data:/app/data
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: proxmox-db
     restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-proxmox_manager}
+      POSTGRES_USER: ${POSTGRES_USER:-proxmox}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - proxmox-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-proxmox}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    image: ghcr.io/waive-as/proxmox-manager-backend:latest
+    container_name: proxmox-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DATABASE_PROVIDER: postgresql
+      DATABASE_URL: postgresql://${POSTGRES_USER:-proxmox}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-proxmox_manager}?schema=public
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET must be set}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proxmox-network
+    volumes:
+      - backend-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
+  # Proxy Server (handles CORS for Proxmox API)
+  proxy:
+    image: ghcr.io/waive-as/proxmox-manager-proxy:latest
+    container_name: proxmox-proxy
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+    networks:
+      - proxmox-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (React SPA)
+  frontend:
+    image: ghcr.io/waive-as/proxmox-manager:latest
+    container_name: proxmox-frontend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:80"
+    environment:
+      VITE_API_URL: http://backend:3002
+      VITE_PROXY_URL: http://proxy:3001
+    depends_on:
+      - backend
+      - proxy
+    networks:
+      - proxmox-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
-  app-data:
+  postgres-data:
     driver: local
+  backend-logs:
+    driver: local
+
+networks:
+  proxmox-network:
+    driver: bridge

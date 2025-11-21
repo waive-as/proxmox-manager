@@ -28,7 +28,7 @@ import {
   CheckCircle,
   XCircle
 } from "lucide-react";
-import { localProxmoxService } from "@/services/localProxmoxService";
+import { proxmoxService } from "@/services/proxmoxService";
 import { ProxmoxServer } from "@/lib/localStorage";
 import { toast } from "sonner";
 
@@ -81,7 +81,7 @@ const ServersTab: React.FC = () => {
   const fetchServers = async () => {
     try {
       setIsLoading(true);
-      const serverList = await localProxmoxService.getServers();
+      const serverList = await proxmoxService.getServers();
       setServers(serverList);
     } catch (error: any) {
       console.error("Failed to fetch servers:", error);
@@ -128,7 +128,7 @@ const ServersTab: React.FC = () => {
   const handleDelete = async (server: ProxmoxServer) => {
     if (confirm(`Are you sure you want to remove "${server.name}"?\n\nVMs from this server will no longer be accessible.`)) {
       try {
-        await localProxmoxService.deleteServer(server.id);
+        await proxmoxService.deleteServer(server.id);
         toast.success(`Server "${server.name}" removed successfully`);
         fetchServers(); // Refresh the list
       } catch (error: any) {
@@ -151,7 +151,7 @@ const ServersTab: React.FC = () => {
 
       // If editing, test the existing server
       if (editingId) {
-        const result = await localProxmoxService.testConnection(editingId);
+        const result = await proxmoxService.testConnection(editingId);
         setTestResult(result);
         if (result.success) {
           toast.success("Connection test successful!");
@@ -181,10 +181,10 @@ const ServersTab: React.FC = () => {
       };
 
       if (editingId) {
-        await localProxmoxService.updateServer(editingId, serverData);
+        await proxmoxService.updateServer(editingId, serverData);
         toast.success(`Server "${data.name}" updated successfully`);
       } else {
-        await localProxmoxService.addServer(serverData);
+        await proxmoxService.addServer(serverData);
         toast.success(`Server "${data.name}" added successfully`);
       }
 
@@ -201,7 +201,7 @@ const ServersTab: React.FC = () => {
   const handleTestExistingServer = async (server: ProxmoxServer) => {
     try {
       setTestingId(server.id);
-      const result = await localProxmoxService.testConnection(server.id);
+      const result = await proxmoxService.testConnection(server.id);
 
       if (result.success) {
         toast.success(`Successfully connected to "${server.name}"`);
@@ -264,7 +264,7 @@ const ServersTab: React.FC = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={handleSubmit(onSubmit)} autoComplete="off" className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label htmlFor="name">Server Name</Label>

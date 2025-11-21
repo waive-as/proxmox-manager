@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { useWhiteLabel } from "@/context/WhiteLabelContext";
 import { toast } from "sonner";
-import waiveLogo from "@/assets/waive_logo.svg";
 
 const BrandingTab: React.FC = () => {
   const { config, updateConfig, resetConfig, uploadLogo, uploadFavicon } =
@@ -211,17 +210,16 @@ const BrandingTab: React.FC = () => {
                   className="max-h-16 max-w-full object-contain"
                 />
               ) : (
-                <img
-                  src={waiveLogo}
-                  alt="Default Logo"
-                  className="max-h-16 max-w-full object-contain opacity-50"
-                />
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                  <Image className="h-8 w-8 mb-1 opacity-50" />
+                  <span className="text-xs">No logo uploaded</span>
+                </div>
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-2 text-center">
               {config.logoUrl
                 ? "Custom logo"
-                : "Default logo (upload custom logo below)"}
+                : "No logo (upload custom logo below)"}
             </p>
           </div>
 

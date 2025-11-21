@@ -102,7 +102,7 @@ export class ActivityLogService {
     ]);
 
     return {
-      logs: logs.map(log => ({
+      logs: logs.map((log: any) => ({
         ...log,
         details: log.details ? JSON.parse(log.details) : null,
       })),
@@ -172,11 +172,11 @@ export class ActivityLogService {
 
     return {
       totalLogs,
-      byAction: byAction.map(item => ({
+      byAction: byAction.map((item: any) => ({
         action: item.action,
         count: item._count.action,
       })),
-      byStatus: byStatus.map(item => ({
+      byStatus: byStatus.map((item: any) => ({
         status: item.status,
         count: item._count.status,
       })),

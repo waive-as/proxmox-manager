@@ -1,10 +1,10 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { AuthContextType, User, UserRole } from "@/types/auth";
-import { localAuthService } from "@/services/localAuthService";
-import { localUserService } from "@/services/localUserService";
+import { authService } from "@/services/authService";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       try {
         const token = localStorage.getItem('auth_token');
         if (token) {
-          const currentUser = await localAuthService.getCurrentUser();
+          const currentUser = await authService.getCurrentUser();
           setUser(currentUser);
         } else {
           setUser(null);
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setError(null);
-      const { user } = await localAuthService.login(email, password);
+      const { user } = await authService.login(email, password);
       setUser(user);
       toast.success("Login successful");
       navigate('/dashboard');
@@ -68,8 +68,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const register = async (email: string, password: string, name: string): Promise<boolean> => {
     try {
       setError(null);
-      // Registration not supported in localStorage mode - use setup wizard
-      throw new Error("Registration is not available. Please contact an administrator.");
+      const { user } = await authService.register(email, password, name);
+      setUser(user);
+      toast.success("Registration successful");
+      navigate('/dashboard');
+      return true;
     } catch (error: any) {
       console.error("Registration error:", error);
       const errorMessage = error.message || "Registration failed";
@@ -81,7 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async (): Promise<void> => {
     try {
-      await localAuthService.logout();
+      await authService.logout();
       setUser(null);
       setError(null);
       toast.info("You have been logged out");
@@ -99,8 +102,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // User management functions (admin only)
   const getUsersList = async (): Promise<User[]> => {
     try {
-      const users = await localUserService.getAllUsers();
-      return users;
+      const response = await api.get('/users');
+      return response.data.data || [];
     } catch (error: any) {
       console.error("Failed to fetch users:", error);
       toast.error(error.message || "Failed to fetch users");
@@ -110,7 +113,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const updateUserRole = async (userId: string, role: UserRole): Promise<boolean> => {
     try {
-      await localUserService.updateUser(userId, { role });
+      await api.put(`/users/${userId}`, { role });
       toast.success("User role updated successfully");
       return true;
     } catch (error: any) {
@@ -122,7 +125,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const deleteUser = async (userId: string): Promise<boolean> => {
     try {
-      await localUserService.deleteUser(userId);
+      await api.delete(`/users/${userId}`);
       toast.success("User deleted successfully");
       return true;
     } catch (error: any) {

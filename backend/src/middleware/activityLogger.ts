@@ -45,9 +45,9 @@ export function activityLogger(action: string, options?: {
       }
 
       // Log activity (don't await - fire and forget)
-      if (req.user?.id) {
+      if (req.user?.userId) {
         activityLogService.log({
-          userId: req.user.id,
+          userId: req.user.userId,
           action,
           resource,
           details,
@@ -95,10 +95,10 @@ export async function logUserAction(
   resource?: string,
   details?: any
 ) {
-  if (!req.user?.id) return;
+  if (!req.user?.userId) return;
 
   await activityLogService.log({
-    userId: req.user.id,
+    userId: req.user.userId,
     action,
     resource,
     details,

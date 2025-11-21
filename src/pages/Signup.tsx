@@ -79,7 +79,7 @@ const Signup: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
             {errorMsg && (
               <Alert variant="destructive">
                 <AlertDescription>{errorMsg}</AlertDescription>

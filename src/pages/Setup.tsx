@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { storageService } from "@/lib/localStorage";
+import { setupService } from "@/services/setupService";
 import { CheckCircle2, XCircle, Shield } from "lucide-react";
 
 interface PasswordRequirements {
@@ -19,6 +20,7 @@ interface PasswordRequirements {
 
 const Setup = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -80,12 +82,15 @@ const Setup = () => {
     try {
       setIsSubmitting(true);
 
-      // Initialize system with admin user
-      await storageService.initializeWithAdmin(
-        formData.email,
-        formData.password,
-        formData.name
-      );
+      // Initialize system with admin user via backend API
+      await setupService.initialize({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name
+      });
+
+      // Invalidate the setup status query so SetupCheck sees the updated status
+      await queryClient.invalidateQueries({ queryKey: ['setup-status'] });
 
       toast.success("Setup completed successfully!");
 
@@ -116,7 +121,7 @@ const Setup = () => {
             Let's set up your administrator account to get started
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <CardContent className="space-y-6">
             {error && (
               <Alert variant="destructive">

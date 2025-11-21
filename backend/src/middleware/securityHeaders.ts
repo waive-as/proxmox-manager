@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from 'express';
  * Security headers middleware
  * Adds comprehensive security headers to all responses
  */
-export function securityHeadersMiddleware(req: Request, res: Response, next: NextFunction): void {
+export function securityHeadersMiddleware(_req: Request, res: Response, next: NextFunction): void {
   // Content Security Policy (CSP)
   // Restricts sources for scripts, styles, images, etc.
   const cspDirectives = [
@@ -84,7 +84,8 @@ export function corsMiddleware(req: Request, res: Response, next: NextFunction):
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    return res.status(204).send();
+    res.status(204).send();
+    return;
   }
 
   next();
@@ -93,7 +94,7 @@ export function corsMiddleware(req: Request, res: Response, next: NextFunction):
 /**
  * Disable caching for sensitive endpoints
  */
-export function noCacheMiddleware(req: Request, res: Response, next: NextFunction): void {
+export function noCacheMiddleware(_req: Request, res: Response, next: NextFunction): void {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');

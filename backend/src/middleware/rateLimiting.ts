@@ -93,11 +93,12 @@ export function createRateLimiter(config: RateLimitConfig) {
       const retryAfter = Math.ceil((entry.resetTime - now) / 1000);
       res.setHeader('Retry-After', retryAfter.toString());
 
-      return res.status(429).json({
+      res.status(429).json({
         error: 'Rate limit exceeded',
         message,
         retryAfter
       });
+      return;
     }
 
     // If configured, reset counter on successful response

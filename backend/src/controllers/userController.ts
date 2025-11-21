@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { asyncHandler } from '@/middleware/errorHandler.js';
 import { AppError } from '@/middleware/errorHandler.js';

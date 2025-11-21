@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:3002/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3002/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -53,47 +53,24 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor: Handle errors and token refresh
+// Response interceptor: Handle errors
 api.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as any;
-
-    // Handle 401 Unauthorized
+    // Handle 401 Unauthorized - but don't automatically log out
+    // Let components handle auth errors gracefully
     if (error.response?.status === 401) {
-      // If we haven't tried to refresh yet, attempt token refresh
-      if (!originalRequest._retry) {
-        originalRequest._retry = true;
+      // Only log warning, don't force logout
+      console.warn('Received 401 Unauthorized response:', error.config?.url);
 
-        try {
-          // Try to refresh the access token
-          await axios.post('http://localhost:3002/api/auth/refresh', {}, {
-            withCredentials: true
-          });
-
-          // Retry the original request
-          return api(originalRequest);
-        } catch (refreshError) {
-          // Refresh failed - redirect to login
-          // Clear legacy localStorage token
-          localStorage.removeItem('auth_token');
-
-          // Only redirect if not already on login/setup page
-          if (!['/login', '/signup', '/setup'].includes(window.location.pathname)) {
-            window.location.href = '/login';
-          }
-
-          return Promise.reject(refreshError);
-        }
+      // If it's the profile endpoint specifically, might indicate session expiry
+      if (error.config?.url?.includes('/users/profile')) {
+        console.warn('Profile fetch failed - possible session expiry');
       }
 
-      // Already tried refresh, redirect to login
-      localStorage.removeItem('auth_token');
-      if (!['/login', '/signup', '/setup'].includes(window.location.pathname)) {
-        window.location.href = '/login';
-      }
+      // Don't automatically redirect or clear token - let AuthContext handle it
     }
 
     // Handle 403 CSRF errors
@@ -101,8 +78,6 @@ api.interceptors.response.use(
       const errorData = error.response?.data as any;
       if (errorData?.error?.includes('CSRF')) {
         console.error('CSRF validation failed - please refresh the page');
-        // Optionally refresh the page to get a new CSRF token
-        // window.location.reload();
       }
     }
 

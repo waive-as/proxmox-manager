@@ -15,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import waiveLogo from "@/assets/waive_logo.svg";
 
 interface NavbarProps {
   sidebarOpen: boolean;
@@ -56,11 +55,13 @@ const Navbar: React.FC<NavbarProps> = ({ sidebarOpen, onToggleSidebar }) => {
             <Menu className="h-5 w-5" />
           </Button>
                 <div className="flex items-center gap-2">
-                  <img
-                    src={config.logoUrl || waiveLogo}
-                    alt={config.companyName}
-                    className="h-6"
-                  />
+                  {config.logoUrl && (
+                    <img
+                      src={config.logoUrl}
+                      alt={config.companyName}
+                      className="h-6"
+                    />
+                  )}
                   <h1 className="text-xl font-medium">{config.companyName}</h1>
                 </div>
         </div>

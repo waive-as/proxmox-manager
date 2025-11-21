@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { userController } from '@/controllers/userController.js';
+import { authController } from '@/controllers/authController.js';
 import { authenticateToken, requireAdmin } from '@/middleware/auth.js';
 import { validateRequest } from '@/middleware/validation.js';
 import { CreateUserSchema, UpdateUserSchema, ToggleUserStatusSchema } from '@/types/schemas.js';
@@ -29,10 +30,16 @@ router.put('/:id',
   userController.updateUser
 );
 router.delete('/:id', requireAdmin, userController.deleteUser);
-router.put('/:id/status', 
+router.put('/:id/status',
   requireAdmin,
   validateRequest(ToggleUserStatusSchema),
   userController.toggleUserStatus
+);
+
+// Admin resets user password
+router.post('/:userId/reset-password',
+  requireAdmin,
+  authController.adminResetPassword
 );
 
 export default router;

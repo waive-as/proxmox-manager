@@ -41,7 +41,7 @@ export const serverService = {
         orderBy: { createdAt: 'desc' }
       });
       
-      return servers.map(server => ({
+      return servers.map((server: any) => ({
         id: server.id,
         name: server.name,
         host: server.host,
