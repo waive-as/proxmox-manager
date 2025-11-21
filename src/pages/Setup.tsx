@@ -121,7 +121,7 @@ const Setup = () => {
             Let's set up your administrator account to get started
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <CardContent className="space-y-6">
             {error && (
               <Alert variant="destructive">

@@ -186,7 +186,7 @@ export const ResetPasswordDialog = ({ open, onOpenChange, user, onSuccess }: Res
             </DialogFooter>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} autoComplete="off">
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">

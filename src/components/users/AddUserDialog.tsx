@@ -81,7 +81,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange }) => 
             Create a new user for the Proxmox management portal.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Full Name</Label>
