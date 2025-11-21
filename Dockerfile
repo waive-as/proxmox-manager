@@ -1,6 +1,6 @@
 # Multi-stage build for Proxmox Manager Portal
 # Stage 1: Build the frontend
-FROM node:18-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Build proxy server dependencies
-FROM node:18-alpine AS proxy-builder
+FROM node:20-alpine AS proxy-builder
 
 WORKDIR /app/proxy-server
 
@@ -31,7 +31,7 @@ RUN npm ci --omit=dev
 COPY proxy-server/ ./
 
 # Stage 3: Production image
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 

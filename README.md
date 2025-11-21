@@ -88,56 +88,69 @@ Proxmox Manager Portal is an open-source web application that provides a clean, 
 
 ### Installation
 
-#### Option 1: Docker (Recommended)
+#### Option 1: Docker Compose (Recommended)
 
-**Using Pre-built Image (Easiest):**
-
-```bash
-# Pull and run the latest image from GitHub Container Registry
-docker run -d \
-  --name proxmox-manager \
-  -p 8080:8080 \
-  -v proxmox-data:/app/data \
-  --restart unless-stopped \
-  ghcr.io/waive-as/proxmox-manager:latest
-
-# Access at http://localhost:8080
-```
-
-**Or build from source:**
+The easiest way to get started with the full stack (PostgreSQL + Backend + Proxy + Frontend):
 
 ```bash
 # Clone the repository
 git clone https://github.com/waive-as/proxmox-manager.git
 cd proxmox-manager
 
-# Start with Docker Compose
-docker-compose up -d
+# Start all services (no .env file needed for testing!)
+docker compose up -d
 
 # Access at http://localhost:8080
-# The application includes both the frontend and proxy server
 ```
 
-#### Option 2: Local Development
+**For production deployments**, create a `.env` file with secure credentials:
+```bash
+cp .env.example .env
+# Edit .env and set secure passwords and JWT secrets
+docker compose up -d
+```
+
+**What's included:**
+- PostgreSQL database (persistent storage)
+- Backend API server
+- CORS proxy server
+- React frontend
+- Automatic health checks and restarts
+
+#### Option 1b: Portainer (Great for GUI Management)
+
+Deploy directly in Portainer without cloning the repository:
+
+1. Open Portainer → Stacks → Add Stack
+2. Paste the contents of `docker-compose.yml` from the repository
+3. (Optional but recommended) Add environment variables:
+   - `POSTGRES_PASSWORD` - Secure database password
+   - `JWT_SECRET` - Random string (generate with `openssl rand -base64 32`)
+   - `JWT_REFRESH_SECRET` - Another random string
+   - `PORT` - Frontend port (default: 8080)
+4. Click "Deploy the stack"
+5. Access at `http://<your-server-ip>:8080`
+
+The application works with default values for quick testing, but **always set custom secrets for production**!
+
+#### Option 2: Local Development (Contributors)
+
+For contributors who want to build from source and develop locally:
 
 ```bash
 # Clone the repository
 git clone https://github.com/waive-as/proxmox-manager.git
 cd proxmox-manager
 
-# Install dependencies
+# Use the local development compose file
+docker compose -f docker-compose.local.yml up -d
+
+# Or run without Docker:
 npm install
 cd proxy-server && npm install && cd ..
-
-# Start development servers
-npm run dev
-
-# In another terminal, start the proxy server
-cd proxy-server && npm start
+npm run dev  # Frontend on http://localhost:8081
+cd proxy-server && npm start  # Proxy on http://localhost:3001
 ```
-
-Access the application:
-- **Application**: http://localhost:8081 (includes both frontend and proxy server)
 
 ### First-Run Setup
 
@@ -300,12 +313,14 @@ Security is a top priority. If you discover a security vulnerability, please fol
 
 ### Environment Variables
 
-Create a `.env` file for configuration:
+The application works with defaults, but you can customize with a `.env` file:
 
 ```env
-VITE_API_URL=http://localhost:3001
-VITE_SUPABASE_URL=your-supabase-url (optional)
-VITE_SUPABASE_ANON_KEY=your-anon-key (optional)
+# Optional frontend configuration
+VITE_API_URL=http://localhost:3002/api
+VITE_PROXY_URL=http://localhost:3001
+
+# See .env.example for full list of options
 ```
 
 ## 📊 Project Status

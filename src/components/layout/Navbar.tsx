@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Menu, BellRing, Moon, Sun, LogOut, User } from "lucide-react";
+import { Menu, BellRing, Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useWhiteLabel } from "@/context/WhiteLabelContext";
@@ -98,11 +98,6 @@ const Navbar: React.FC<NavbarProps> = ({ sidebarOpen, onToggleSidebar }) => {
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/settings")}>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
