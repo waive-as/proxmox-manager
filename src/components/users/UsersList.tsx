@@ -11,10 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { Pencil, Trash2, Loader2, AlertTriangle, KeyRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import EditUserDialog from "./EditUserDialog";
 import DeleteUserDialog from "./DeleteUserDialog";
+import { ResetPasswordDialog } from "./ResetPasswordDialog";
 import { toast } from "sonner";
 
 const UsersList: React.FC = () => {
@@ -24,6 +25,7 @@ const UsersList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<null | any>(null);
   const [deletingUser, setDeletingUser] = useState<null | any>(null);
+  const [resettingPasswordUser, setResettingPasswordUser] = useState<null | any>(null);
   
   // Fetch users list
   const fetchUsers = async () => {
@@ -139,6 +141,14 @@ const UsersList: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setResettingPasswordUser(user)}
+                    title="Reset Password"
+                  >
+                    <KeyRound className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setEditingUser(user)}
                     disabled={user.id === currentUser?.id} // Can't edit yourself
                   >
@@ -174,6 +184,18 @@ const UsersList: React.FC = () => {
           open={!!deletingUser}
           onOpenChange={(open) => !open && setDeletingUser(null)}
           onDelete={handleDeleteUser}
+        />
+      )}
+
+      {resettingPasswordUser && (
+        <ResetPasswordDialog
+          user={resettingPasswordUser}
+          open={!!resettingPasswordUser}
+          onOpenChange={(open) => !open && setResettingPasswordUser(null)}
+          onSuccess={() => {
+            toast.success("Password reset successfully");
+            fetchUsers();
+          }}
         />
       )}
     </div>

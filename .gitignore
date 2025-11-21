@@ -23,4 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-.env
+.env.env.local
+*.env
+*.db
+*.db-journal
+.claude/
+coverage/
+logs/

@@ -7,9 +7,9 @@ import { serverService } from '@/services/serverService.js';
 export const proxmoxController = {
   getNodes: asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { serverId } = req.params;
-    
+
     // Get server details from database
-    const server = await serverService.findById(serverId);
+    const server = await serverService.getServerById(serverId, req.user!.userId);
     if (!server || !server.isActive) {
       return res.status(404).json({
         success: false,
@@ -25,12 +25,12 @@ export const proxmoxController = {
       // Get nodes from Proxmox
       const nodes = await client.getNodes();
       
-      res.json({
+      return res.json({
         success: true,
         data: nodes
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to get nodes'
       });
@@ -74,12 +74,12 @@ export const proxmoxController = {
         }
       }
       
-      res.json({
+      return res.json({
         success: true,
         data: allVMs
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to get VMs'
       });
@@ -98,7 +98,7 @@ export const proxmoxController = {
     }
 
     // Get server details from database
-    const server = await serverService.findById(serverId);
+    const server = await serverService.getServerById(serverId, req.user!.userId);
     if (!server || !server.isActive) {
       return res.status(404).json({
         success: false,
@@ -114,12 +114,12 @@ export const proxmoxController = {
       // Get VM details from Proxmox
       const vmDetails = await client.getVMDetails(node as string, parseInt(vmid));
       
-      res.json({
+      return res.json({
         success: true,
         data: vmDetails
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to get VM details'
       });
@@ -154,12 +154,12 @@ export const proxmoxController = {
       // Start VM
       await client.startVM(node, parseInt(vmid));
       
-      res.json({
+      return res.json({
         success: true,
         message: `VM ${vmid} started successfully`
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to start VM'
       });
@@ -194,12 +194,12 @@ export const proxmoxController = {
       // Stop VM
       await client.stopVM(node, parseInt(vmid));
       
-      res.json({
+      return res.json({
         success: true,
         message: `VM ${vmid} stopped successfully`
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to stop VM'
       });
@@ -234,12 +234,12 @@ export const proxmoxController = {
       // Restart VM
       await client.restartVM(node, parseInt(vmid));
       
-      res.json({
+      return res.json({
         success: true,
         message: `VM ${vmid} restarted successfully`
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to restart VM'
       });
@@ -274,12 +274,12 @@ export const proxmoxController = {
       // Reset VM (hard reboot)
       await client.resetVM(node, parseInt(vmid));
       
-      res.json({
+      return res.json({
         success: true,
         message: `VM ${vmid} reset successfully`
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to reset VM'
       });
@@ -314,12 +314,12 @@ export const proxmoxController = {
       // Shutdown VM (graceful shutdown)
       await client.shutdownVM(node, parseInt(vmid));
       
-      res.json({
+      return res.json({
         success: true,
         message: `VM ${vmid} shutdown successfully`
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to shutdown VM'
       });
@@ -330,7 +330,7 @@ export const proxmoxController = {
     const { serverId } = req.params;
     
     // Get server details from database
-    const server = await serverService.findById(serverId);
+    const server = await serverService.getServerById(serverId, req.user!.userId);
     if (!server || !server.isActive) {
       return res.status(404).json({
         success: false,
@@ -346,12 +346,12 @@ export const proxmoxController = {
       // Get cluster status
       const clusterStatus = await client.getClusterStatus();
       
-      res.json({
+      return res.json({
         success: true,
         data: clusterStatus
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to get server stats'
       });

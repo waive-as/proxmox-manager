@@ -80,6 +80,7 @@ export const JWTPayloadSchema = z.object({
 
 export type CreateUserInput = z.infer<typeof CreateUserSchema>;
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+export type ToggleUserStatusInput = z.infer<typeof ToggleUserStatusSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
 export type CreateServerInput = z.infer<typeof CreateServerSchema>;

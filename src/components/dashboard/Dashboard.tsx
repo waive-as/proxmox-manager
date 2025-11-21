@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   ArrowRight
 } from "lucide-react";
-import { localProxmoxService } from "@/services/localProxmoxService";
+import { proxmoxService } from "@/services/proxmoxService";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
@@ -20,7 +20,7 @@ const Dashboard: React.FC = () => {
   // Fetch servers
   const { data: servers, isLoading: serversLoading } = useQuery({
     queryKey: ['proxmox-servers'],
-    queryFn: () => localProxmoxService.getServers(),
+    queryFn: () => proxmoxService.getServers(),
     staleTime: 30 * 1000,
   });
 
@@ -32,7 +32,7 @@ const Dashboard: React.FC = () => {
       
       const vmPromises = servers.map(async (server) => {
         try {
-          const vms = await localProxmoxService.getVMs(server.id);
+          const vms = await proxmoxService.getVMs(server.id);
           return vms.map((vm: any) => ({
             vmid: vm.vmid,
             name: vm.name || `VM ${vm.vmid}`,

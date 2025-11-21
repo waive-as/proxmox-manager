@@ -12,9 +12,7 @@ import {
 
 // JWT configuration
 const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'change-this-secret-in-production';
-const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || 'change-this-refresh-secret-in-production';
 const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
-const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
 
 // Refresh token store (use Redis in production)
 interface RefreshTokenEntry {

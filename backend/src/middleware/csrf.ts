@@ -37,19 +37,6 @@ function validateToken(sessionId: string, token: string): boolean {
 }
 
 /**
- * Remove CSRF token after use (one-time use)
- */
-function removeToken(sessionId: string, token: string): void {
-  const tokens = tokenStore.get(sessionId);
-  if (tokens) {
-    tokens.delete(token);
-    if (tokens.size === 0) {
-      tokenStore.delete(sessionId);
-    }
-  }
-}
-
-/**
  * Cleanup old tokens (call periodically)
  */
 export function cleanupTokens(): void {
@@ -63,7 +50,7 @@ export function cleanupTokens(): void {
  */
 export function generateCSRFMiddleware(req: Request, res: Response, next: NextFunction): void {
   // Get or create session ID (from JWT, session cookie, etc.)
-  const sessionId = (req as any).user?.id || req.sessionID || 'anonymous';
+  const sessionId = req.user?.userId || req.sessionID || 'anonymous';
 
   // Generate new CSRF token
   const token = generateCSRFToken();
@@ -96,7 +83,7 @@ export function validateCSRFMiddleware(req: Request, res: Response, next: NextFu
   }
 
   // Get session ID
-  const sessionId = (req as any).user?.id || req.sessionID || 'anonymous';
+  const sessionId = req.user?.userId || req.sessionID || 'anonymous';
 
   // Get token from header or form body
   const headerToken = req.get(CSRF_HEADER_NAME);
@@ -107,26 +94,29 @@ export function validateCSRFMiddleware(req: Request, res: Response, next: NextFu
 
   // Validate token exists
   if (!submittedToken) {
-    return res.status(403).json({
+    res.status(403).json({
       error: 'CSRF token missing',
       message: 'CSRF token is required for this operation'
     });
+    return;
   }
 
   // Validate token matches cookie (double-submit pattern)
   if (submittedToken !== cookieToken) {
-    return res.status(403).json({
+    res.status(403).json({
       error: 'CSRF token mismatch',
       message: 'CSRF token does not match'
     });
+    return;
   }
 
   // Validate token is in store (server-side validation)
   if (!validateToken(sessionId, submittedToken)) {
-    return res.status(403).json({
+    res.status(403).json({
       error: 'Invalid CSRF token',
       message: 'CSRF token is invalid or expired'
     });
+    return;
   }
 
   // Token is valid - optionally remove it for one-time use
@@ -151,15 +141,15 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction):
 /**
  * Express error handler for CSRF errors
  */
-export function csrfErrorHandler(err: any, req: Request, res: Response, next: NextFunction): void {
+export function csrfErrorHandler(err: any, _req: Request, res: Response, next: NextFunction): void {
   if (err.code === 'EBADCSRFTOKEN') {
     res.status(403).json({
       error: 'Invalid CSRF token',
       message: 'Form validation failed. Please refresh and try again.'
     });
-  } else {
-    next(err);
+    return;
   }
+  next(err);
 }
 
 export default {

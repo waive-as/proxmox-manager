@@ -23,7 +23,7 @@ import {
   Power,
   PowerOff
 } from "lucide-react";
-import { localProxmoxService } from "@/services/localProxmoxService";
+import { proxmoxService } from "@/services/proxmoxService";
 import { ProxmoxServer } from "@/lib/localStorage";
 import { ProxmoxVM, VMWithServer } from "@/types/vm";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -42,7 +42,7 @@ const VirtualMachines: React.FC = () => {
   // Fetch servers
   const { data: servers, isLoading: serversLoading } = useQuery({
     queryKey: ['proxmox-servers'],
-    queryFn: () => localProxmoxService.getServers(),
+    queryFn: () => proxmoxService.getServers(),
     staleTime: 30 * 1000,
   });
 
@@ -54,7 +54,7 @@ const VirtualMachines: React.FC = () => {
       
       const vmPromises = servers.map(async (server) => {
         try {
-          const vms = await localProxmoxService.getVMs(server.id);
+          const vms = await proxmoxService.getVMs(server.id);
           return vms.map((vm: any) => ({
             vmid: vm.vmid,
             name: vm.name || `VM ${vm.vmid}`,
@@ -94,15 +94,15 @@ const VirtualMachines: React.FC = () => {
   const vmActionMutation = useMutation({
     mutationFn: async ({ action, vm }: { action: string, vm: VMWithServer }) => {
       if (action === 'start') {
-        return localProxmoxService.startVM(vm.serverId, vm.node, vm.vmid);
+        return proxmoxService.startVM(vm.serverId, vm.node, vm.vmid);
       } else if (action === 'stop') {
-        return localProxmoxService.stopVM(vm.serverId, vm.node, vm.vmid);
+        return proxmoxService.stopVM(vm.serverId, vm.node, vm.vmid);
       } else if (action === 'restart') {
-        return localProxmoxService.restartVM(vm.serverId, vm.node, vm.vmid);
+        return proxmoxService.restartVM(vm.serverId, vm.node, vm.vmid);
       } else if (action === 'reset') {
-        return localProxmoxService.resetVM(vm.serverId, vm.node, vm.vmid);
+        return proxmoxService.resetVM(vm.serverId, vm.node, vm.vmid);
       } else if (action === 'shutdown') {
-        return localProxmoxService.shutdownVM(vm.serverId, vm.node, vm.vmid);
+        return proxmoxService.shutdownVM(vm.serverId, vm.node, vm.vmid);
       }
     },
     onSuccess: (_, { action, vm }) => {

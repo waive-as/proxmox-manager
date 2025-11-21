@@ -23,6 +23,11 @@ app.get('/', (req, res) => {
   res.send({ status: 'Proxmox API Proxy running' });
 });
 
+// Health check endpoint for Docker
+app.get('/health', (req, res) => {
+  res.status(200).send({ status: 'healthy' });
+});
+
 // Handle API requests
 app.all('/api/:serverId/*', (req, res, next) => {
   const serverId = req.params.serverId;

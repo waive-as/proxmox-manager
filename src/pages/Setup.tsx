@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ interface PasswordRequirements {
 
 const Setup = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -86,6 +88,9 @@ const Setup = () => {
         password: formData.password,
         name: formData.name
       });
+
+      // Invalidate the setup status query so SetupCheck sees the updated status
+      await queryClient.invalidateQueries({ queryKey: ['setup-status'] });
 
       toast.success("Setup completed successfully!");
 

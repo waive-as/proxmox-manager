@@ -13,7 +13,7 @@ export interface WhiteLabelConfig {
 
 const DEFAULT_CONFIG: WhiteLabelConfig = {
   companyName: 'Proxmox Manager Portal',
-  logoUrl: null, // Will use default Waive logo
+  logoUrl: null,
   faviconUrl: null,
   primaryColor: undefined,
   loginBackgroundUrl: null,

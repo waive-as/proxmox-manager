@@ -9,7 +9,8 @@ export interface User {
   role: string; // ADMIN, READONLY, USER
   passwordHash: string;
   isActive: boolean;
-  lastLoginAt?: Date;
+  requirePasswordChange?: boolean;
+  lastLoginAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -92,20 +93,24 @@ export const userService = {
     }
   },
 
-  update: async (id: string, updates: Partial<User>): Promise<User | undefined> => {
+  update: async (id: string, updates: Partial<User> & { password?: string }): Promise<User | undefined> => {
     try {
+      const updateData: any = {};
+
+      if (updates.username !== undefined) updateData.username = updates.username;
+      if (updates.email !== undefined) updateData.email = updates.email;
+      if (updates.passwordHash !== undefined) updateData.password = updates.passwordHash;
+      if (updates.password !== undefined) updateData.password = updates.password;
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.role !== undefined) updateData.role = updates.role.toUpperCase();
+      if (updates.isActive !== undefined) updateData.isActive = updates.isActive;
+      if (updates.requirePasswordChange !== undefined) updateData.requirePasswordChange = updates.requirePasswordChange;
+
       const user = await prisma.user.update({
         where: { id },
-        data: {
-          username: updates.username,
-          email: updates.email,
-          password: updates.passwordHash,
-          name: updates.name,
-          role: updates.role ? updates.role.toUpperCase() : undefined, // Convert to uppercase for database
-          isActive: updates.isActive
-        }
+        data: updateData
       });
-      
+
       return {
         id: user.id,
         username: user.username,
@@ -114,6 +119,7 @@ export const userService = {
         role: user.role.toLowerCase(), // Convert to lowercase for API
         passwordHash: user.password,
         isActive: user.isActive,
+        requirePasswordChange: user.requirePasswordChange,
         lastLoginAt: user.lastLoginAt,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -142,7 +148,7 @@ export const userService = {
         orderBy: { createdAt: 'desc' }
       });
       
-      return users.map(user => ({
+      return users.map((user: any) => ({
         id: user.id,
         username: user.username,
         email: user.email,
@@ -225,7 +231,7 @@ export const userService = {
         }
       });
       
-      return users.map(user => ({
+      return users.map((user: any) => ({
         id: user.id,
         username: user.username,
         email: user.email,

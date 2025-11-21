@@ -42,10 +42,14 @@ export const initializeSetup = async (req: Request, res: Response) => {
       throw new ApiError(400, 'Setup has already been completed');
     }
 
+    // Hash password
+    const bcrypt = await import('bcryptjs');
+    const passwordHash = await bcrypt.default.hash(password, 12);
+
     // Create first admin user
-    const user = await userService.createUser({
+    const user = await userService.create({
       email,
-      password,
+      passwordHash,
       name,
       username: email.split('@')[0],
       role: 'ADMIN',

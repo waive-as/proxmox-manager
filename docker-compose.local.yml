@@ -1,0 +1,108 @@
+# Proxmox Manager Portal - Local Testing
+# Builds all images from local source code
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: proxmox-db-local
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-proxmox_manager}
+      POSTGRES_USER: ${POSTGRES_USER:-proxmox}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+    volumes:
+      - postgres-local-data:/var/lib/postgresql/data
+    networks:
+      - proxmox-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-proxmox} -d ${POSTGRES_DB:-proxmox_manager}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (built from local source)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: proxmox-backend-local
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DATABASE_PROVIDER: postgresql
+      DATABASE_URL: postgresql://${POSTGRES_USER:-proxmox}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-proxmox_manager}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change_this_secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_secret}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080,http://localhost:8081}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proxmox-network
+    volumes:
+      - backend-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1); });"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Proxy Server (built from local source)
+  proxy:
+    build:
+      context: ./proxy-server
+      dockerfile: Dockerfile
+    container_name: proxmox-proxy-local
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+    networks:
+      - proxmox-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (built from local source)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: proxmox-frontend-local
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      VITE_API_URL: http://localhost:3002
+      VITE_PROXY_URL: http://localhost:3001
+    depends_on:
+      - backend
+      - proxy
+    networks:
+      - proxmox-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres-local-data:
+    driver: local
+  backend-logs:
+    driver: local
+
+networks:
+  proxmox-network:
+    driver: bridge

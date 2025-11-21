@@ -6,11 +6,12 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "test": "jest",
-    "test:proxmox": "tsx test-proxmox.ts"
+    "test:proxmox": "tsx test-proxmox.ts",
+    "reset-password": "node scripts/reset-password.js"
   },
   "keywords": [
     "proxmox",
