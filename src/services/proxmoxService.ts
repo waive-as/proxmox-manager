@@ -6,10 +6,14 @@ export interface ProxmoxServer {
   name: string;
   host: string;
   port: number;
+  tokenId: string;
   userId: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  // Legacy fields for backwards compatibility
+  username?: string;
+  realm?: string;
 }
 
 export interface AddServerDto {

@@ -47,7 +47,8 @@ export const authController = {
           username: user.username,
           email: user.email,
           name: user.name,
-          role: user.role
+          role: user.role,
+          requirePasswordChange: user.requirePasswordChange
         }
       }
     });

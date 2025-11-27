@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Setup from "./pages/Setup";
+import ForcePasswordChange from "./pages/ForcePasswordChange";
 import DashboardPage from "./pages/Dashboard";
 import VirtualMachines from "./pages/VirtualMachines";
 import Monitoring from "./pages/Monitoring";
@@ -25,9 +26,10 @@ import { ThemeProvider } from "./hooks/use-theme";
 import { queryClient } from "./lib/queryClient";
 import { setupService } from "./services/setupService";
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  
+const ProtectedRoute = ({ children, allowPasswordChange = false }: { children: React.ReactNode; allowPasswordChange?: boolean }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -35,11 +37,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
+  // If user needs to change password, redirect to change-password page
+  // unless we're already on that page (allowPasswordChange = true)
+  if (user?.requirePasswordChange && !allowPasswordChange && location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" replace />;
+  }
+
   return <>{children}</>;
 };
 
@@ -91,6 +99,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/change-password" element={<ProtectedRoute allowPasswordChange><ForcePasswordChange /></ProtectedRoute>} />
       
       {/* Protected routes with Layout wrapper */}
       <Route
