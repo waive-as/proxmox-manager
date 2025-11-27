@@ -1,8 +1,10 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 
 // Create axios instance with base configuration
+// Use relative URL '/api' so requests go to the same host (nginx proxies to backend)
+// This avoids CORS issues and works regardless of deployment host/port
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3002/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

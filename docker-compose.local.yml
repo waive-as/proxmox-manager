@@ -36,8 +36,6 @@ services:
       dockerfile: Dockerfile
     container_name: proxmox-backend-local
     restart: unless-stopped
-    ports:
-      - "3002:3002"
     environment:
       NODE_ENV: production
       PORT: 3002
@@ -69,8 +67,6 @@ services:
       dockerfile: Dockerfile
     container_name: proxmox-proxy-local
     restart: unless-stopped
-    ports:
-      - "3001:3001"
     environment:
       NODE_ENV: production
       PORT: 3001
@@ -82,7 +78,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # Frontend (built from local source)
+  # Frontend (built from local source with nginx reverse proxy)
   frontend:
     build:
       context: .
@@ -91,9 +87,6 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT:-8080}:8080"
-    environment:
-      VITE_API_URL: http://localhost:3002
-      VITE_PROXY_URL: http://localhost:3001
     depends_on:
       - backend
       - proxy
