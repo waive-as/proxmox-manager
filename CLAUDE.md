@@ -594,7 +594,7 @@ const onSubmit = (data: FormData) => {
 - Use Claude branches: `claude/claude-md-*` for AI-assisted development
 
 ### Commit Messages
-Use conventional commits format:
+Use conventional commits format. Do NOT add AI signatures, co-authored-by lines, or emoji footers to commits:
 ```
 feat: Add user role management
 fix: Resolve CORS issue with proxy server

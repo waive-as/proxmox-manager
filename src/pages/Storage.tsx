@@ -1,9 +1,9 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { HardDrive } from "lucide-react";
+import { HardDrive, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useServerConnections } from "@/hooks/use-server-connections";
+import { useQuery } from "@tanstack/react-query";
+import { proxmoxService } from "@/services/proxmoxService";
 import { useAuth } from "@/context/AuthContext";
 
 // Mock storage data - in a real app this would come from the Proxmox API
@@ -44,10 +44,44 @@ const mockStorageData = [
 ];
 
 const Storage: React.FC = () => {
-  const { servers } = useServerConnections();
   const { user } = useAuth();
   const isReadOnly = user?.role === "readonly";
-  
+
+  const { data: servers = [], isLoading, error } = useQuery({
+    queryKey: ['servers'],
+    queryFn: () => proxmoxService.getServers(),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="container py-6">
+        <Card>
+          <CardContent className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            Loading servers...
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Storage</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-destructive">
+              Failed to load servers. Please try again later.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (servers.length === 0) {
     return (
       <div className="container py-6">

@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Setup from '../../pages/Setup';
-import { storageService } from '../../lib/localStorage';
+import { setupService } from '../../services/setupService';
 
-vi.mock('../../lib/localStorage');
+vi.mock('../../services/setupService');
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
@@ -20,17 +21,28 @@ vi.mock('sonner', () => ({
   },
 }));
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        {children}
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
+
 describe('Setup Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should render setup form', () => {
-    render(
-      <BrowserRouter>
-        <Setup />
-      </BrowserRouter>
-    );
+    render(<Setup />, { wrapper: createWrapper() });
 
     expect(screen.getByText(/Welcome to Proxmox Manager/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Full Name/i)).toBeInTheDocument();
@@ -39,11 +51,7 @@ describe('Setup Component', () => {
   });
 
   it('should show password requirements', () => {
-    render(
-      <BrowserRouter>
-        <Setup />
-      </BrowserRouter>
-    );
+    render(<Setup />, { wrapper: createWrapper() });
 
     const passwordInput = screen.getByLabelText(/^Password$/i);
     fireEvent.change(passwordInput, { target: { value: 'Test' } });
@@ -56,11 +64,7 @@ describe('Setup Component', () => {
   });
 
   it('should validate password strength in real-time', () => {
-    render(
-      <BrowserRouter>
-        <Setup />
-      </BrowserRouter>
-    );
+    render(<Setup />, { wrapper: createWrapper() });
 
     const passwordInput = screen.getByLabelText(/^Password$/i);
 
@@ -75,11 +79,7 @@ describe('Setup Component', () => {
   });
 
   it('should require all fields', async () => {
-    render(
-      <BrowserRouter>
-        <Setup />
-      </BrowserRouter>
-    );
+    render(<Setup />, { wrapper: createWrapper() });
 
     const submitButton = screen.getByRole('button', { name: /Complete Setup/i });
     fireEvent.click(submitButton);
@@ -90,11 +90,7 @@ describe('Setup Component', () => {
   });
 
   it('should validate email format', async () => {
-    render(
-      <BrowserRouter>
-        <Setup />
-      </BrowserRouter>
-    );
+    render(<Setup />, { wrapper: createWrapper() });
 
     fireEvent.change(screen.getByLabelText(/Full Name/i), {
       target: { value: 'Test User' }
@@ -118,11 +114,7 @@ describe('Setup Component', () => {
   });
 
   it('should validate password confirmation', async () => {
-    render(
-      <BrowserRouter>
-        <Setup />
-      </BrowserRouter>
-    );
+    render(<Setup />, { wrapper: createWrapper() });
 
     fireEvent.change(screen.getByLabelText(/Full Name/i), {
       target: { value: 'Test User' }
@@ -145,21 +137,21 @@ describe('Setup Component', () => {
     });
   });
 
-  it('should call initializeWithAdmin on valid submission', async () => {
+  it('should call setupService.initialize on valid submission', async () => {
     const mockInitialize = vi.fn().mockResolvedValue({
-      id: '1',
-      email: 'admin@example.com',
-      name: 'Admin User',
-      role: 'admin'
+      success: true,
+      message: 'Setup completed successfully',
+      data: {
+        id: '1',
+        email: 'admin@example.com',
+        name: 'Admin User',
+        role: 'admin'
+      }
     });
 
-    vi.mocked(storageService.initializeWithAdmin).mockImplementation(mockInitialize);
+    vi.mocked(setupService.initialize).mockImplementation(mockInitialize);
 
-    render(
-      <BrowserRouter>
-        <Setup />
-      </BrowserRouter>
-    );
+    render(<Setup />, { wrapper: createWrapper() });
 
     fireEvent.change(screen.getByLabelText(/Full Name/i), {
       target: { value: 'Admin User' }
@@ -178,20 +170,16 @@ describe('Setup Component', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockInitialize).toHaveBeenCalledWith(
-        'admin@example.com',
-        'AdminPass123!',
-        'Admin User'
-      );
+      expect(mockInitialize).toHaveBeenCalledWith({
+        email: 'admin@example.com',
+        password: 'AdminPass123!',
+        name: 'Admin User'
+      });
     });
   });
 
   it('should show security notice', () => {
-    render(
-      <BrowserRouter>
-        <Setup />
-      </BrowserRouter>
-    );
+    render(<Setup />, { wrapper: createWrapper() });
 
     expect(screen.getByText(/Security Notice/i)).toBeInTheDocument();
     expect(screen.getByText(/remember this password/i)).toBeInTheDocument();

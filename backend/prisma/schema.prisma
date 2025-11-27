@@ -139,3 +139,16 @@ model Webhook {
 
   @@map("webhooks")
 }
+
+model Settings {
+  id           String   @id @default("default") // Single row with fixed ID
+  companyName  String   @default("Proxmox Manager Portal")
+  logoData     String?  // Base64 encoded logo image
+  faviconData  String?  // Base64 encoded favicon
+  primaryColor String?  // Hex color code for primary theme color
+  loginBackgroundData String? // Base64 encoded login background image
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("settings")
+}
