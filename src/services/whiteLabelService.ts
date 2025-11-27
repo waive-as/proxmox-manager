@@ -1,59 +1,101 @@
 /**
  * White Label Service - Manages branding and customization
- * Allows customization of company name, logo, and other branding elements
+ * Now uses server-side storage instead of localStorage
  */
+
+import { api } from '@/lib/api';
 
 export interface WhiteLabelConfig {
   companyName: string;
-  logoUrl: string | null;
-  faviconUrl: string | null;
-  primaryColor?: string;
-  loginBackgroundUrl?: string | null;
+  logoUrl: string | null;      // Kept for backward compatibility in UI
+  logoData: string | null;     // Base64 data from server
+  faviconUrl: string | null;   // Kept for backward compatibility in UI
+  faviconData: string | null;  // Base64 data from server
+  primaryColor?: string | null;
+  loginBackgroundUrl?: string | null;  // Kept for backward compatibility
+  loginBackgroundData?: string | null; // Base64 data from server
 }
 
 const DEFAULT_CONFIG: WhiteLabelConfig = {
   companyName: 'Proxmox Manager Portal',
   logoUrl: null,
+  logoData: null,
   faviconUrl: null,
+  faviconData: null,
   primaryColor: undefined,
   loginBackgroundUrl: null,
+  loginBackgroundData: null,
 };
-
-const STORAGE_KEY = 'white_label_config';
 
 class WhiteLabelService {
   /**
-   * Get current white label configuration
+   * Get current white label configuration from server
    */
-  getConfig(): WhiteLabelConfig {
+  async getConfig(): Promise<WhiteLabelConfig> {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const config = JSON.parse(stored);
-        return { ...DEFAULT_CONFIG, ...config };
-      }
-      return DEFAULT_CONFIG;
+      const response = await api.get('/settings');
+      const data = response.data.data;
+
+      return {
+        companyName: data.companyName || DEFAULT_CONFIG.companyName,
+        logoUrl: data.logoData,      // Use data as URL (base64)
+        logoData: data.logoData,
+        faviconUrl: data.faviconData,
+        faviconData: data.faviconData,
+        primaryColor: data.primaryColor,
+        loginBackgroundUrl: data.loginBackgroundData,
+        loginBackgroundData: data.loginBackgroundData,
+      };
     } catch (error) {
-      console.error('Failed to load white label config:', error);
+      console.error('Failed to load white label config from server:', error);
       return DEFAULT_CONFIG;
     }
   }
 
   /**
-   * Update white label configuration
+   * Update white label configuration on server
    */
-  updateConfig(config: Partial<WhiteLabelConfig>): WhiteLabelConfig {
+  async updateConfig(config: Partial<WhiteLabelConfig>): Promise<WhiteLabelConfig> {
     try {
-      const currentConfig = this.getConfig();
-      const newConfig = { ...currentConfig, ...config };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig));
+      // Map UI fields to server fields
+      const serverConfig: Record<string, any> = {};
+
+      if (config.companyName !== undefined) {
+        serverConfig.companyName = config.companyName;
+      }
+      if (config.logoData !== undefined || config.logoUrl !== undefined) {
+        serverConfig.logoData = config.logoData ?? config.logoUrl;
+      }
+      if (config.faviconData !== undefined || config.faviconUrl !== undefined) {
+        serverConfig.faviconData = config.faviconData ?? config.faviconUrl;
+      }
+      if (config.primaryColor !== undefined) {
+        serverConfig.primaryColor = config.primaryColor;
+      }
+      if (config.loginBackgroundData !== undefined || config.loginBackgroundUrl !== undefined) {
+        serverConfig.loginBackgroundData = config.loginBackgroundData ?? config.loginBackgroundUrl;
+      }
+
+      const response = await api.put('/settings', serverConfig);
+      const data = response.data.data;
+
+      const newConfig: WhiteLabelConfig = {
+        companyName: data.companyName,
+        logoUrl: data.logoData,
+        logoData: data.logoData,
+        faviconUrl: data.faviconData,
+        faviconData: data.faviconData,
+        primaryColor: data.primaryColor,
+        loginBackgroundUrl: data.loginBackgroundData,
+        loginBackgroundData: data.loginBackgroundData,
+      };
 
       // Update page title
       this.updatePageTitle(newConfig.companyName);
 
       // Update favicon if provided
-      if (newConfig.faviconUrl) {
-        this.updateFavicon(newConfig.faviconUrl);
+      if (newConfig.faviconData) {
+        this.updateFavicon(newConfig.faviconData);
       }
 
       return newConfig;
@@ -66,11 +108,23 @@ class WhiteLabelService {
   /**
    * Reset to default configuration
    */
-  resetConfig(): WhiteLabelConfig {
+  async resetConfig(): Promise<WhiteLabelConfig> {
     try {
-      localStorage.removeItem(STORAGE_KEY);
-      this.updatePageTitle(DEFAULT_CONFIG.companyName);
-      return DEFAULT_CONFIG;
+      const response = await api.post('/settings/reset');
+      const data = response.data.data;
+
+      this.updatePageTitle(data.companyName);
+
+      return {
+        companyName: data.companyName,
+        logoUrl: data.logoData,
+        logoData: data.logoData,
+        faviconUrl: data.faviconData,
+        faviconData: data.faviconData,
+        primaryColor: data.primaryColor,
+        loginBackgroundUrl: data.loginBackgroundData,
+        loginBackgroundData: data.loginBackgroundData,
+      };
     } catch (error) {
       console.error('Failed to reset white label config:', error);
       throw error;
@@ -80,14 +134,14 @@ class WhiteLabelService {
   /**
    * Update page title dynamically
    */
-  private updatePageTitle(companyName: string): void {
+  updatePageTitle(companyName: string): void {
     document.title = companyName;
   }
 
   /**
    * Update favicon dynamically
    */
-  private updateFavicon(faviconUrl: string): void {
+  updateFavicon(faviconUrl: string): void {
     try {
       // Remove existing favicon
       const existingFavicon = document.querySelector("link[rel*='icon']");
@@ -107,7 +161,7 @@ class WhiteLabelService {
   }
 
   /**
-   * Upload and store logo as base64
+   * Upload and convert logo to base64
    */
   async uploadLogo(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -139,7 +193,7 @@ class WhiteLabelService {
   }
 
   /**
-   * Upload and store favicon as base64
+   * Upload and convert favicon to base64
    */
   async uploadFavicon(file: File): Promise<string> {
     return this.uploadLogo(file); // Same logic

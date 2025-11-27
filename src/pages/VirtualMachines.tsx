@@ -23,8 +23,7 @@ import {
   Power,
   PowerOff
 } from "lucide-react";
-import { proxmoxService } from "@/services/proxmoxService";
-import { ProxmoxServer } from "@/lib/localStorage";
+import { proxmoxService, ProxmoxServer } from "@/services/proxmoxService";
 import { ProxmoxVM, VMWithServer } from "@/types/vm";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";

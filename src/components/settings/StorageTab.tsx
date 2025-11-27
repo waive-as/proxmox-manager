@@ -1,10 +1,10 @@
-
 import React from "react";
-import { useServerConnections } from "@/hooks/use-server-connections";
+import { useQuery } from "@tanstack/react-query";
+import { proxmoxService } from "@/services/proxmoxService";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { HardDrive, ChevronDown, ChevronRight } from "lucide-react";
+import { HardDrive, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -46,15 +46,43 @@ const mockStorageData = [
 ];
 
 const StorageTab: React.FC = () => {
-  const { servers } = useServerConnections();
   const { user } = useAuth();
   const [expandedServer, setExpandedServer] = React.useState<string | null>(null);
-  
+
+  const { data: servers = [], isLoading, error } = useQuery({
+    queryKey: ['servers'],
+    queryFn: () => proxmoxService.getServers(),
+  });
+
   const toggleServer = (serverId: string) => {
     setExpandedServer(expandedServer === serverId ? null : serverId);
   };
 
   const isReadOnly = user?.role === "readonly";
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          Loading servers...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Storage</CardTitle>
+          <CardDescription>
+            Failed to load servers. Please try again later.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   if (servers.length === 0) {
     return (

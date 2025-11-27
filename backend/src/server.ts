@@ -9,6 +9,7 @@ import userRoutes from '@/routes/users.js';
 import serverRoutes from '@/routes/servers.js';
 import proxmoxRoutes from '@/routes/proxmox.js';
 import setupRoutes from '@/routes/setup.js';
+import settingsRoutes from '@/routes/settings.js';
 
 // Load environment variables
 dotenv.config();
@@ -45,6 +46,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/servers', serverRoutes);
 app.use('/api/proxmox', proxmoxRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
 app.use(notFoundHandler);

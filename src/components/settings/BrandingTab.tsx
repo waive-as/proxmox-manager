@@ -22,28 +22,42 @@ import { useWhiteLabel } from "@/context/WhiteLabelContext";
 import { toast } from "sonner";
 
 const BrandingTab: React.FC = () => {
-  const { config, updateConfig, resetConfig, uploadLogo, uploadFavicon } =
+  const { config, updateConfig, resetConfig, uploadLogo, uploadFavicon, isLoading } =
     useWhiteLabel();
   const [companyName, setCompanyName] = useState(config.companyName);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [previewLogo, setPreviewLogo] = useState<string | null>(
-    config.logoUrl
+    config.logoUrl || config.logoData
   );
   const logoInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
+
+  // Update local state when config changes
+  React.useEffect(() => {
+    setCompanyName(config.companyName);
+    setPreviewLogo(config.logoUrl || config.logoData);
+  }, [config]);
 
   const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCompanyName(e.target.value);
   };
 
-  const handleSaveCompanyName = () => {
+  const handleSaveCompanyName = async () => {
     if (!companyName.trim()) {
       toast.error("Company name cannot be empty");
       return;
     }
 
-    updateConfig({ companyName });
-    toast.success("Company name updated successfully");
+    try {
+      setIsSaving(true);
+      await updateConfig({ companyName });
+      toast.success("Company name updated successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save company name");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,22 +129,35 @@ const BrandingTab: React.FC = () => {
     }
   };
 
-  const handleRemoveLogo = () => {
-    updateConfig({ logoUrl: null });
-    setPreviewLogo(null);
-    toast.success("Logo removed - using default");
+  const handleRemoveLogo = async () => {
+    try {
+      setIsUploading(true);
+      await updateConfig({ logoData: null });
+      setPreviewLogo(null);
+      toast.success("Logo removed - using default");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to remove logo");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleResetAll = () => {
+  const handleResetAll = async () => {
     if (
       confirm(
         "Are you sure you want to reset all branding to defaults?\n\nThis will remove your custom logo and company name."
       )
     ) {
-      resetConfig();
-      setCompanyName(config.companyName);
-      setPreviewLogo(null);
-      toast.success("Branding reset to defaults");
+      try {
+        setIsSaving(true);
+        await resetConfig();
+        setPreviewLogo(null);
+        toast.success("Branding reset to defaults");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to reset branding");
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -171,10 +198,10 @@ const BrandingTab: React.FC = () => {
               />
               <Button
                 onClick={handleSaveCompanyName}
-                disabled={companyName === config.companyName}
+                disabled={companyName === config.companyName || isSaving}
               >
                 <Save className="mr-2 h-4 w-4" />
-                Save
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -203,9 +230,9 @@ const BrandingTab: React.FC = () => {
               Current Logo Preview
             </Label>
             <div className="flex items-center justify-center h-20 bg-white dark:bg-gray-900 rounded border">
-              {config.logoUrl || previewLogo ? (
+              {config.logoData || config.logoUrl || previewLogo ? (
                 <img
-                  src={config.logoUrl || previewLogo || ""}
+                  src={config.logoData || config.logoUrl || previewLogo || ""}
                   alt="Company Logo"
                   className="max-h-16 max-w-full object-contain"
                 />
@@ -217,7 +244,7 @@ const BrandingTab: React.FC = () => {
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-2 text-center">
-              {config.logoUrl
+              {config.logoData || config.logoUrl
                 ? "Custom logo"
                 : "No logo (upload custom logo below)"}
             </p>
@@ -243,7 +270,7 @@ const BrandingTab: React.FC = () => {
                 <Upload className="mr-2 h-4 w-4" />
                 {isUploading ? "Uploading..." : "Upload Logo"}
               </Button>
-              {config.logoUrl && (
+              {(config.logoData || config.logoUrl) && (
                 <Button
                   onClick={handleRemoveLogo}
                   disabled={isUploading}
@@ -288,7 +315,7 @@ const BrandingTab: React.FC = () => {
               <Upload className="mr-2 h-4 w-4" />
               {isUploading ? "Uploading..." : "Upload Favicon"}
             </Button>
-            {config.faviconUrl && (
+            {(config.faviconData || config.faviconUrl) && (
               <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
                 <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                 <AlertDescription className="text-green-600 dark:text-green-400">

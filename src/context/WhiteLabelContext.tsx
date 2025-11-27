@@ -3,11 +3,24 @@ import { WhiteLabelConfig, whiteLabelService } from '@/services/whiteLabelServic
 
 interface WhiteLabelContextType {
   config: WhiteLabelConfig;
-  updateConfig: (config: Partial<WhiteLabelConfig>) => void;
-  resetConfig: () => void;
+  isLoading: boolean;
+  updateConfig: (config: Partial<WhiteLabelConfig>) => Promise<void>;
+  resetConfig: () => Promise<void>;
   uploadLogo: (file: File) => Promise<void>;
   uploadFavicon: (file: File) => Promise<void>;
+  refreshConfig: () => Promise<void>;
 }
+
+const DEFAULT_CONFIG: WhiteLabelConfig = {
+  companyName: 'Proxmox Manager Portal',
+  logoUrl: null,
+  logoData: null,
+  faviconUrl: null,
+  faviconData: null,
+  primaryColor: undefined,
+  loginBackgroundUrl: null,
+  loginBackgroundData: null,
+};
 
 const WhiteLabelContext = createContext<WhiteLabelContextType | undefined>(undefined);
 
@@ -16,27 +29,69 @@ interface WhiteLabelProviderProps {
 }
 
 export const WhiteLabelProvider = ({ children }: WhiteLabelProviderProps) => {
-  const [config, setConfig] = useState<WhiteLabelConfig>(whiteLabelService.getConfig());
+  const [config, setConfig] = useState<WhiteLabelConfig>(DEFAULT_CONFIG);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch config from server on mount
   useEffect(() => {
-    // Initialize page title and favicon on mount
-    document.title = config.companyName;
+    const loadConfig = async () => {
+      try {
+        const serverConfig = await whiteLabelService.getConfig();
+        setConfig(serverConfig);
+
+        // Apply page title and favicon
+        document.title = serverConfig.companyName;
+        if (serverConfig.faviconData) {
+          whiteLabelService.updateFavicon(serverConfig.faviconData);
+        }
+      } catch (error) {
+        console.error('Failed to load white label config:', error);
+        // Keep default config on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadConfig();
   }, []);
 
-  const updateConfig = (newConfig: Partial<WhiteLabelConfig>) => {
-    const updated = whiteLabelService.updateConfig(newConfig);
-    setConfig(updated);
+  const refreshConfig = async () => {
+    try {
+      const serverConfig = await whiteLabelService.getConfig();
+      setConfig(serverConfig);
+      document.title = serverConfig.companyName;
+      if (serverConfig.faviconData) {
+        whiteLabelService.updateFavicon(serverConfig.faviconData);
+      }
+    } catch (error) {
+      console.error('Failed to refresh white label config:', error);
+    }
   };
 
-  const resetConfig = () => {
-    const reset = whiteLabelService.resetConfig();
-    setConfig(reset);
+  const updateConfig = async (newConfig: Partial<WhiteLabelConfig>) => {
+    try {
+      const updated = await whiteLabelService.updateConfig(newConfig);
+      setConfig(updated);
+    } catch (error) {
+      console.error('Failed to update config:', error);
+      throw error;
+    }
+  };
+
+  const resetConfig = async () => {
+    try {
+      const reset = await whiteLabelService.resetConfig();
+      setConfig(reset);
+    } catch (error) {
+      console.error('Failed to reset config:', error);
+      throw error;
+    }
   };
 
   const uploadLogo = async (file: File) => {
     try {
       const base64 = await whiteLabelService.uploadLogo(file);
-      updateConfig({ logoUrl: base64 });
+      await updateConfig({ logoData: base64 });
     } catch (error) {
       console.error('Failed to upload logo:', error);
       throw error;
@@ -46,7 +101,7 @@ export const WhiteLabelProvider = ({ children }: WhiteLabelProviderProps) => {
   const uploadFavicon = async (file: File) => {
     try {
       const base64 = await whiteLabelService.uploadFavicon(file);
-      updateConfig({ faviconUrl: base64 });
+      await updateConfig({ faviconData: base64 });
     } catch (error) {
       console.error('Failed to upload favicon:', error);
       throw error;
@@ -57,10 +112,12 @@ export const WhiteLabelProvider = ({ children }: WhiteLabelProviderProps) => {
     <WhiteLabelContext.Provider
       value={{
         config,
+        isLoading,
         updateConfig,
         resetConfig,
         uploadLogo,
         uploadFavicon,
+        refreshConfig,
       }}
     >
       {children}
