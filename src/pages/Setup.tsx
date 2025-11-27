@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,21 @@ interface PasswordRequirements {
 const Setup = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Check if setup is already complete - redirect if so
+  const { data: setupStatus, isLoading: setupLoading } = useQuery({
+    queryKey: ['setup-status'],
+    queryFn: setupService.checkStatus,
+    retry: 1,
+    staleTime: 5 * 60 * 1000
+  });
+
+  useEffect(() => {
+    if (!setupLoading && setupStatus && !setupStatus.needsSetup) {
+      navigate("/login", { replace: true });
+    }
+  }, [setupLoading, setupStatus, navigate]);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -106,6 +121,15 @@ const Setup = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading while checking setup status
+  if (setupLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <p className="text-xl text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
