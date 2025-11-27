@@ -50,6 +50,9 @@ COPY --from=build --chown=nodejs:nodejs /app/prisma ./prisma
 COPY --chown=nodejs:nodejs package*.json ./
 COPY --chown=nodejs:nodejs scripts ./scripts
 
+# Make start script executable
+RUN chmod +x scripts/start.sh
+
 # Generate Prisma client for production
 RUN npx prisma generate
 
@@ -69,5 +72,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start application
-CMD ["node", "dist/server.js"]
+# Start application (runs migrations first, then starts server)
+CMD ["sh", "scripts/start.sh"]
