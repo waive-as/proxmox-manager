@@ -1,44 +1,44 @@
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Server, 
-  Plus, 
-  Trash2, 
-  Check, 
-  X, 
-  Edit, 
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Server,
+  Plus,
+  Trash2,
+  Check,
+  X,
+  Edit,
   RefreshCw,
   Loader2,
   AlertTriangle,
   CheckCircle,
-  XCircle
-} from "lucide-react";
-import { proxmoxService } from "@/services/proxmoxService";
-import { ProxmoxServer } from "@/lib/localStorage";
-import { toast } from "sonner";
+  XCircle,
+} from 'lucide-react';
+import { proxmoxService } from '@/services/proxmoxService';
+import { ProxmoxServer } from '@/lib/localStorage';
+import { toast } from 'sonner';
 
 // Zod schema for form validation
 const serverSchema = z.object({
-  name: z.string().min(2, "Server name must be at least 2 characters"),
-  host: z.string().min(1, "Host is required"),
-  port: z.number().min(1).max(65535, "Port must be between 1 and 65535"),
-  username: z.string().min(1, "Username is required"),
-  realm: z.string().min(1, "Realm is required (e.g., pam, pve)"),
+  name: z.string().min(2, 'Server name must be at least 2 characters'),
+  host: z.string().min(1, 'Host is required'),
+  port: z.number().min(1).max(65535, 'Port must be between 1 and 65535'),
+  username: z.string().min(1, 'Username is required'),
+  realm: z.string().min(1, 'Realm is required (e.g., pam, pve)'),
 });
 
 type ServerFormData = z.infer<typeof serverSchema>;
@@ -49,7 +49,10 @@ const ServersTab: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   const {
     register,
@@ -58,16 +61,16 @@ const ServersTab: React.FC = () => {
     reset,
     setValue,
     watch,
-    trigger
+    trigger,
   } = useForm<ServerFormData>({
     resolver: zodResolver(serverSchema),
     defaultValues: {
-      name: "",
-      host: "10.0.1.60",
+      name: '',
+      host: '10.0.1.60',
       port: 8006,
-      username: "root",
-      realm: "pam",
-    }
+      username: 'root',
+      realm: 'pam',
+    },
   });
 
   // Watch form values for test connection validation
@@ -84,8 +87,8 @@ const ServersTab: React.FC = () => {
       const serverList = await proxmoxService.getServers();
       setServers(serverList);
     } catch (error: any) {
-      console.error("Failed to fetch servers:", error);
-      toast.error(error.message || "Failed to fetch servers");
+      console.error('Failed to fetch servers:', error);
+      toast.error(error.message || 'Failed to fetch servers');
     } finally {
       setIsLoading(false);
     }
@@ -93,11 +96,11 @@ const ServersTab: React.FC = () => {
 
   const resetForm = () => {
     reset({
-      name: "",
-      host: "10.0.1.60",
+      name: '',
+      host: '10.0.1.60',
       port: 8006,
-      username: "root",
-      realm: "pam",
+      username: 'root',
+      realm: 'pam',
     });
     setTestResult(null);
   };
@@ -115,25 +118,29 @@ const ServersTab: React.FC = () => {
   };
 
   const handleEdit = (server: ProxmoxServer) => {
-    setValue("name", server.name);
-    setValue("host", server.host);
-    setValue("port", server.port);
-    setValue("username", server.username);
-    setValue("realm", server.realm);
+    setValue('name', server.name);
+    setValue('host', server.host);
+    setValue('port', server.port);
+    setValue('username', server.username);
+    setValue('realm', server.realm);
     setEditingId(server.id);
     setIsAdding(true);
     setTestResult(null);
   };
 
   const handleDelete = async (server: ProxmoxServer) => {
-    if (confirm(`Are you sure you want to remove "${server.name}"?\n\nVMs from this server will no longer be accessible.`)) {
+    if (
+      confirm(
+        `Are you sure you want to remove "${server.name}"?\n\nVMs from this server will no longer be accessible.`
+      )
+    ) {
       try {
         await proxmoxService.deleteServer(server.id);
         toast.success(`Server "${server.name}" removed successfully`);
         fetchServers(); // Refresh the list
       } catch (error: any) {
-        console.error("Failed to delete server:", error);
-        toast.error(error.message || "Failed to delete server");
+        console.error('Failed to delete server:', error);
+        toast.error(error.message || 'Failed to delete server');
       }
     }
   };
@@ -143,7 +150,7 @@ const ServersTab: React.FC = () => {
       // Validate form before testing
       const isValid = await trigger();
       if (!isValid) {
-        toast.error("Please fix form errors before testing connection");
+        toast.error('Please fix form errors before testing connection');
         return;
       }
 
@@ -154,17 +161,20 @@ const ServersTab: React.FC = () => {
         const result = await proxmoxService.testConnection(editingId);
         setTestResult(result);
         if (result.success) {
-          toast.success("Connection test successful!");
+          toast.success('Connection test successful!');
         } else {
           toast.error(`Connection test failed: ${result.message}`);
         }
       } else {
         // For new servers, we can't test until they're saved
-        toast.info("Save the server first, then test the connection");
+        toast.info('Save the server first, then test the connection');
       }
     } catch (error: any) {
-      console.error("Connection test failed:", error);
-      const errorResult = { success: false, message: error.message || "Connection test failed" };
+      console.error('Connection test failed:', error);
+      const errorResult = {
+        success: false,
+        message: error.message || 'Connection test failed',
+      };
       setTestResult(errorResult);
       toast.error(`Connection test failed: ${errorResult.message}`);
     }
@@ -193,8 +203,8 @@ const ServersTab: React.FC = () => {
       resetForm();
       fetchServers(); // Refresh the list
     } catch (error: any) {
-      console.error("Failed to save server:", error);
-      toast.error(error.message || "Failed to save server");
+      console.error('Failed to save server:', error);
+      toast.error(error.message || 'Failed to save server');
     }
   };
 
@@ -209,7 +219,7 @@ const ServersTab: React.FC = () => {
         toast.error(`Failed to connect to "${server.name}": ${result.message}`);
       }
     } catch (error: any) {
-      console.error("Connection test failed:", error);
+      console.error('Connection test failed:', error);
       toast.error(`Failed to connect to "${server.name}": ${error.message}`);
     } finally {
       setTestingId(null);
@@ -254,38 +264,44 @@ const ServersTab: React.FC = () => {
                   Add Server
                 </Button>
               )}
-              
+
               {isAdding && (
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle>{editingId ? "Edit Server" : "Add New Server"}</CardTitle>
+                    <CardTitle>
+                      {editingId ? 'Edit Server' : 'Add New Server'}
+                    </CardTitle>
                     <CardDescription>
                       Configure your Proxmox server connection details.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handleSubmit(onSubmit)} autoComplete="off" className="space-y-4">
+                    <form
+                      onSubmit={handleSubmit(onSubmit)}
+                      autoComplete="off"
+                      className="space-y-4"
+                    >
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label htmlFor="name">Server Name</Label>
                           <Input
                             id="name"
-                            placeholder="Mozart Server"
-                            {...register("name")}
+                            placeholder="Server Name"
+                            {...register('name')}
                           />
                           {errors.name && (
-                            <p className="text-sm text-red-500">{errors.name.message}</p>
+                            <p className="text-sm text-red-500">
+                              {errors.name.message}
+                            </p>
                           )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="host">Host/IP Address</Label>
-                          <Input
-                            id="host"
-                            placeholder="10.0.1.60"
-                            {...register("host")}
-                          />
+                          <Input id="host" {...register('host')} />
                           {errors.host && (
-                            <p className="text-sm text-red-500">{errors.host.message}</p>
+                            <p className="text-sm text-red-500">
+                              {errors.host.message}
+                            </p>
                           )}
                         </div>
                         <div className="space-y-2">
@@ -294,10 +310,12 @@ const ServersTab: React.FC = () => {
                             id="port"
                             type="number"
                             placeholder="8006"
-                            {...register("port", { valueAsNumber: true })}
+                            {...register('port', { valueAsNumber: true })}
                           />
                           {errors.port && (
-                            <p className="text-sm text-red-500">{errors.port.message}</p>
+                            <p className="text-sm text-red-500">
+                              {errors.port.message}
+                            </p>
                           )}
                         </div>
                         <div className="space-y-2">
@@ -305,13 +323,15 @@ const ServersTab: React.FC = () => {
                           <Input
                             id="username"
                             placeholder="root"
-                            {...register("username")}
+                            {...register('username')}
                           />
                           <p className="text-xs text-muted-foreground">
                             Proxmox username (e.g., root)
                           </p>
                           {errors.username && (
-                            <p className="text-sm text-red-500">{errors.username.message}</p>
+                            <p className="text-sm text-red-500">
+                              {errors.username.message}
+                            </p>
                           )}
                         </div>
                         <div className="space-y-2">
@@ -319,13 +339,15 @@ const ServersTab: React.FC = () => {
                           <Input
                             id="realm"
                             placeholder="pam"
-                            {...register("realm")}
+                            {...register('realm')}
                           />
                           <p className="text-xs text-muted-foreground">
                             Authentication realm (pam, pve, etc.)
                           </p>
                           {errors.realm && (
-                            <p className="text-sm text-red-500">{errors.realm.message}</p>
+                            <p className="text-sm text-red-500">
+                              {errors.realm.message}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -336,7 +358,13 @@ const ServersTab: React.FC = () => {
                           type="button"
                           variant="outline"
                           onClick={handleTestConnection}
-                          disabled={isSubmitting || !watchedValues.name || !watchedValues.host || !watchedValues.username || !watchedValues.realm}
+                          disabled={
+                            isSubmitting ||
+                            !watchedValues.name ||
+                            !watchedValues.host ||
+                            !watchedValues.username ||
+                            !watchedValues.realm
+                          }
                         >
                           <RefreshCw className="mr-2 h-4 w-4" />
                           Test Connection
@@ -345,20 +373,37 @@ const ServersTab: React.FC = () => {
 
                       {/* Test Result Alert */}
                       {testResult && (
-                        <Alert className={testResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+                        <Alert
+                          className={
+                            testResult.success
+                              ? 'border-green-200 bg-green-50'
+                              : 'border-red-200 bg-red-50'
+                          }
+                        >
                           {testResult.success ? (
                             <CheckCircle className="h-4 w-4 text-green-600" />
                           ) : (
                             <XCircle className="h-4 w-4 text-red-600" />
                           )}
-                          <AlertDescription className={testResult.success ? "text-green-800" : "text-red-800"}>
+                          <AlertDescription
+                            className={
+                              testResult.success
+                                ? 'text-green-800'
+                                : 'text-red-800'
+                            }
+                          >
                             {testResult.message}
                           </AlertDescription>
                         </Alert>
                       )}
 
                       <div className="flex justify-end space-x-2 pt-4">
-                        <Button variant="outline" type="button" onClick={handleCancel} disabled={isSubmitting}>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={handleCancel}
+                          disabled={isSubmitting}
+                        >
                           <X className="mr-2 h-4 w-4" />
                           Cancel
                         </Button>
@@ -371,7 +416,7 @@ const ServersTab: React.FC = () => {
                           ) : (
                             <>
                               <Check className="mr-2 h-4 w-4" />
-                              {editingId ? "Update" : "Add"} Server
+                              {editingId ? 'Update' : 'Add'} Server
                             </>
                           )}
                         </Button>
@@ -380,64 +425,69 @@ const ServersTab: React.FC = () => {
                   </CardContent>
                 </Card>
               )}
-              
-              {!isAdding && servers.map((server) => (
-                <Card key={server.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Server className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <CardTitle className="text-lg">{server.name}</CardTitle>
-                          <CardDescription>
-                            {server.host}:{server.port}
-                          </CardDescription>
+
+              {!isAdding &&
+                servers.map((server) => (
+                  <Card key={server.id}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Server className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <CardTitle className="text-lg">
+                              {server.name}
+                            </CardTitle>
+                            <CardDescription>
+                              {server.host}:{server.port}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Badge
+                            variant={server.isActive ? 'default' : 'secondary'}
+                          >
+                            {server.isActive ? 'Active' : 'Inactive'}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(server)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(server)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Badge variant={server.isActive ? "default" : "secondary"}>
-                          {server.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(server)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(server)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardFooter className="pt-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleTestExistingServer(server)}
-                      className="ml-auto"
-                      disabled={testingId === server.id}
-                    >
-                      {testingId === server.id ? (
-                        <>
-                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                          Testing...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="mr-2 h-3 w-3" />
-                          Test Connection
-                        </>
-                      )}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardFooter className="pt-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleTestExistingServer(server)}
+                        className="ml-auto"
+                        disabled={testingId === server.id}
+                      >
+                        {testingId === server.id ? (
+                          <>
+                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                            Testing...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="mr-2 h-3 w-3" />
+                            Test Connection
+                          </>
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
             </div>
           )}
         </CardContent>

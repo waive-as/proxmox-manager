@@ -54,7 +54,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { user } = await authService.login(email, password);
       setUser(user);
       toast.success("Login successful");
-      navigate('/dashboard');
+
+      // Check if user needs to change password
+      if (user.requirePasswordChange) {
+        navigate('/change-password');
+      } else {
+        navigate('/dashboard');
+      }
       return true;
     } catch (error: any) {
       console.error("Login error:", error);
@@ -97,6 +103,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const clearError = () => {
     setError(null);
+  };
+
+  const clearPasswordChangeRequired = () => {
+    if (user) {
+      setUser({ ...user, requirePasswordChange: false });
+    }
   };
 
   // User management functions (admin only)
@@ -146,6 +158,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         register,
         logout,
         clearError,
+        clearPasswordChangeRequired,
         getUsersList,
         updateUserRole,
         deleteUser

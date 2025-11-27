@@ -6,6 +6,7 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
+  requirePasswordChange?: boolean;
 }
 
 export interface AuthContextType {
@@ -17,6 +18,7 @@ export interface AuthContextType {
   register: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => Promise<void>;
   clearError: () => void;
+  clearPasswordChangeRequired: () => void;
   // User management functions (admin only)
   getUsersList: () => Promise<User[]>;
   updateUserRole: (userId: string, role: UserRole) => Promise<boolean>;
