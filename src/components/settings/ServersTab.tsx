@@ -28,8 +28,7 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
-import { proxmoxService } from '@/services/proxmoxService';
-import { ProxmoxServer } from '@/lib/localStorage';
+import { proxmoxService, ProxmoxServer } from '@/services/proxmoxService';
 import { toast } from 'sonner';
 
 // Zod schema for form validation
@@ -37,8 +36,8 @@ const serverSchema = z.object({
   name: z.string().min(2, 'Server name must be at least 2 characters'),
   host: z.string().min(1, 'Host is required'),
   port: z.number().min(1).max(65535, 'Port must be between 1 and 65535'),
-  username: z.string().min(1, 'Username is required'),
-  realm: z.string().min(1, 'Realm is required (e.g., pam, pve)'),
+  tokenId: z.string().min(1, 'Token ID is required'),
+  tokenSecret: z.string().min(1, 'Token Secret is required'),
 });
 
 type ServerFormData = z.infer<typeof serverSchema>;
@@ -66,10 +65,10 @@ const ServersTab: React.FC = () => {
     resolver: zodResolver(serverSchema),
     defaultValues: {
       name: '',
-      host: '10.0.1.60',
+      host: '',
       port: 8006,
-      username: 'root',
-      realm: 'pam',
+      tokenId: '',
+      tokenSecret: '',
     },
   });
 
@@ -97,10 +96,10 @@ const ServersTab: React.FC = () => {
   const resetForm = () => {
     reset({
       name: '',
-      host: '10.0.1.60',
+      host: '',
       port: 8006,
-      username: 'root',
-      realm: 'pam',
+      tokenId: '',
+      tokenSecret: '',
     });
     setTestResult(null);
   };
@@ -121,8 +120,8 @@ const ServersTab: React.FC = () => {
     setValue('name', server.name);
     setValue('host', server.host);
     setValue('port', server.port);
-    setValue('username', server.username);
-    setValue('realm', server.realm);
+    setValue('tokenId', server.tokenId || '');
+    setValue('tokenSecret', ''); // Don't pre-fill secret for security
     setEditingId(server.id);
     setIsAdding(true);
     setTestResult(null);
@@ -186,8 +185,8 @@ const ServersTab: React.FC = () => {
         name: data.name,
         host: data.host,
         port: data.port,
-        username: data.username,
-        realm: data.realm,
+        tokenId: data.tokenId,
+        tokenSecret: data.tokenSecret,
       };
 
       if (editingId) {
@@ -319,34 +318,35 @@ const ServersTab: React.FC = () => {
                           )}
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="username">Username</Label>
+                          <Label htmlFor="tokenId">API Token ID</Label>
                           <Input
-                            id="username"
-                            placeholder="root"
-                            {...register('username')}
+                            id="tokenId"
+                            placeholder="root@pam!my-token"
+                            {...register('tokenId')}
                           />
                           <p className="text-xs text-muted-foreground">
-                            Proxmox username (e.g., root)
+                            Format: user@realm!token-name
                           </p>
-                          {errors.username && (
+                          {errors.tokenId && (
                             <p className="text-sm text-red-500">
-                              {errors.username.message}
+                              {errors.tokenId.message}
                             </p>
                           )}
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="realm">Realm</Label>
+                          <Label htmlFor="tokenSecret">API Token Secret</Label>
                           <Input
-                            id="realm"
-                            placeholder="pam"
-                            {...register('realm')}
+                            id="tokenSecret"
+                            type="password"
+                            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                            {...register('tokenSecret')}
                           />
                           <p className="text-xs text-muted-foreground">
-                            Authentication realm (pam, pve, etc.)
+                            The secret value from token creation
                           </p>
-                          {errors.realm && (
+                          {errors.tokenSecret && (
                             <p className="text-sm text-red-500">
-                              {errors.realm.message}
+                              {errors.tokenSecret.message}
                             </p>
                           )}
                         </div>
@@ -362,8 +362,8 @@ const ServersTab: React.FC = () => {
                             isSubmitting ||
                             !watchedValues.name ||
                             !watchedValues.host ||
-                            !watchedValues.username ||
-                            !watchedValues.realm
+                            !watchedValues.tokenId ||
+                            !watchedValues.tokenSecret
                           }
                         >
                           <RefreshCw className="mr-2 h-4 w-4" />
