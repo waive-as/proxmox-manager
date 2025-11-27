@@ -16,54 +16,27 @@ COPY . .
 # Build the React application
 RUN npm run build
 
-# Stage 2: Build proxy server dependencies
-FROM node:20-alpine AS proxy-builder
+# Stage 2: Production image with nginx
+FROM nginx:alpine AS production
 
-WORKDIR /app/proxy-server
+# Install curl for healthcheck
+RUN apk add --no-cache curl
 
-# Copy proxy server package files
-COPY proxy-server/package*.json ./
+# Remove default nginx config
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Install production dependencies only
-RUN npm ci --omit=dev
-
-# Copy proxy server source
-COPY proxy-server/ ./
-
-# Stage 3: Production image
-FROM node:20-alpine AS production
-
-WORKDIR /app
-
-# Install serve for static files and curl for healthcheck
-RUN apk add --no-cache curl && \
-    npm install -g serve
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+# Copy custom nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built frontend from builder
-COPY --from=frontend-builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=frontend-builder /app/dist /usr/share/nginx/html
 
-# Copy proxy server from builder
-COPY --from=proxy-builder --chown=nodejs:nodejs /app/proxy-server ./proxy-server
-
-# Create data directory for persistence
-RUN mkdir -p /app/data && chown -R nodejs:nodejs /app
-
-# Switch to non-root user
-USER nodejs
-
-# Expose port 8080 (serves both frontend and proxy)
+# Expose port 8080
 EXPOSE 8080
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:8080 || exit 1
 
-# Start script that runs both frontend and proxy
-COPY --chown=nodejs:nodejs docker-entrypoint.sh /app/
-RUN chmod +x /app/docker-entrypoint.sh
-
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

@@ -86,16 +86,13 @@ services:
       timeout: 10s
       retries: 3
 
-  # Frontend (React SPA)
+  # Frontend (React SPA with nginx reverse proxy)
   frontend:
     image: ghcr.io/waive-as/proxmox-manager:latest
     container_name: proxmox-frontend
     restart: unless-stopped
     ports:
       - "${PORT:-8080}:8080"
-    environment:
-      VITE_API_URL: http://backend:3002
-      VITE_PROXY_URL: http://proxy:3001
     depends_on:
       - backend
       - proxy
